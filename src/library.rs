@@ -25,7 +25,7 @@ pub struct Library {
 impl Library {
     pub fn scan(root: PathBuf) -> Self {
         let mut tracks = Vec::new();
-        for entry in WalkDir::new(root.clone()).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(root.clone()).follow_links(false).into_iter().filter_map(|e| e.ok()) {
             let p = entry.path();
             if p.is_file() {
                 if let Some(ext) = p.extension().and_then(|e| e.to_str()).map(|s| s.to_ascii_lowercase()) {

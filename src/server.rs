@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use axum::{extract::{Path as AxPath, State}, http::header, response::IntoResponse, routing::get, Router};
-use tower_http::services::ServeDir;
+use axum::{extract::{Path as AxPath, State}, http::{header, StatusCode}, response::IntoResponse, routing::get, Router};
+use tower_http::{services::ServeDir, trace::TraceLayer};
 
 use crate::library::{Album, Library, Track};
 use crate::playlist::{encode_path, render_m3u8};
@@ -23,6 +23,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/library.m3u8", get(library_m3u8))
         .route("/album/*name", get(album_m3u8))
         .fallback_service(files)
+        .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
 
@@ -32,10 +33,15 @@ struct TplTrack { title: String, url: String }
 #[derive(Serialize)]
 struct TplAlbum { name: String, tracks: Vec<TplTrack> }
 
-async fn index(State(state): State<AppState>) -> impl IntoResponse {
+async fn index(State(state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
     let mut env = Environment::new();
-    env.add_template("index.html", include_str!("static/index.html")).unwrap();
-    let tmpl = env.get_template("index.html").unwrap();
+    if let Err(e) = env.add_template("index.html", include_str!("static/index.html")) {
+        return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("template error: {}", e)));
+    }
+    let tmpl = match env.get_template("index.html") {
+        Ok(t) => t,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("template error: {}", e))),
+    };
     let mut albums_tpl = Vec::new();
     for a in state.lib.albums() {
         let mut ts = Vec::new();
@@ -47,11 +53,14 @@ async fn index(State(state): State<AppState>) -> impl IntoResponse {
         }
         albums_tpl.push(TplAlbum { name: a.name.clone(), tracks: ts });
     }
-    let body = tmpl.render(context!(albums => albums_tpl)).unwrap();
-    ([
+    let body = match tmpl.render(context!(albums => albums_tpl)) {
+        Ok(s) => s,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("render error: {}", e))),
+    };
+    Ok(([
         (header::CONTENT_TYPE, "text/html; charset=utf-8"),
         (header::CACHE_CONTROL, "no-cache"),
-    ], body)
+    ], body))
 }
 
 async fn library_m3u8(State(state): State<AppState>) -> impl axum::response::IntoResponse {
