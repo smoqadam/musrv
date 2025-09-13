@@ -19,3 +19,21 @@ pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Track]) -> String {
     }
     body
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn m3u8_renders_crlf_and_urls() {
+        let tracks = vec![
+            Track { path: PathBuf::from("Album/song one.mp3"), size: None },
+            Track { path: PathBuf::from("Root.mp3"), size: Some(123) },
+        ];
+        let out = render_m3u8("http://h/", Path::new("/"), &tracks);
+        assert!(out.starts_with("#EXTM3U\r\n"));
+        assert!(out.contains("#EXTINF:0,Root.mp3\r\nhttp://h/Root.mp3\r\n"));
+        assert!(out.contains("http://h/Album/song%20one.mp3"));
+    }
+}

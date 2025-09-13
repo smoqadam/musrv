@@ -33,3 +33,38 @@ pub fn validate_request_path(path: &str) -> Result<String, ()> {
     }
     Ok(decoded)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_album_name_accepts_simple() {
+        let s = parse_album_name("MyAlbum.m3u8".to_string()).unwrap();
+        assert_eq!(s, "MyAlbum");
+        let s2 = parse_album_name("Another".to_string()).unwrap();
+        assert_eq!(s2, "Another");
+    }
+
+    #[test]
+    fn parse_album_name_rejects_bad() {
+        assert!(parse_album_name("".to_string()).is_err());
+        assert!(parse_album_name("../hack".to_string()).is_err());
+        assert!(parse_album_name("a/b".to_string()).is_err());
+        assert!(parse_album_name(".hidden".to_string()).is_err());
+    }
+
+    #[test]
+    fn validate_request_path_ok() {
+        let p = validate_request_path("Album/song.mp3").unwrap();
+        assert_eq!(p, "Album/song.mp3");
+    }
+
+    #[test]
+    fn validate_request_path_rejects() {
+        assert!(validate_request_path("").is_err());
+        assert!(validate_request_path("/abs").is_err());
+        assert!(validate_request_path("..%2Fescape").is_err());
+        assert!(validate_request_path(".hidden/file").is_err());
+    }
+}

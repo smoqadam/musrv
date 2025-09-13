@@ -19,3 +19,7 @@ tokio-util = { version = "0.7", features = ["io"] }
 mime_guess = "2"
 tower = "0.5"
 arc-swap = "1"
+
+[dev-dependencies]
+serde_json = "1"
+tempfile = "3"
