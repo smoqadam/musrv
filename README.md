@@ -1,62 +1,48 @@
-musrv — minimal music server
+musrv
+Minimal, zero‑config music server.
 
-Overview
-- Scans a directory for audio files (mp3, flac, m4a, ogg, opus, etc.)
-- Serves a simple web UI at `/` with albums and a basic player
-- Exposes playlists:
-  - `/library.m3u8` — the entire library
-  - `/album/<AlbumName>.m3u8` — a single album
-- JSON API: `/library.json` — albums + tracks for the UI
-- Streams files with HTTP Range support (seek works in most players)
-- Safe-by-default static serving (no traversal; hides dotfiles)
-- Hot refresh: `GET /admin/rescan` rescans and atomically swaps the library
+## Overview
+- Scans a folder for audio files (mp3, flac, m4a, ogg, opus, …)
+- Serves a small web UI at `/` with albums and a basic player
+- Generates playlists and streams files with HTTP Range (seek works)
 
-Install
+## Key Feature
+- Playlists: `/library.m3u8`, `/album/<AlbumName>.m3u8`
+- JSON: `/library.json` (albums + tracks for the UI)
+- Static streaming under the chosen root with traversal protection
+- Rescan endpoint: `GET /admin/rescan` (atomic swap of the library)
+- Album grouping by path depth; root files collected as “Singles”
 
-Cargo (from source)
-- Requirements: Rust stable
-- Clone and build:
-  - `git clone https://github.com/smoqadam/musrv`
-  - `cd musrv`
-  - `cargo install --path .`  (installs the `musrv` binary to Cargo bin dir)
-
-Build from source
-- `git clone https://github.com/smoqadam/musrv`
-- `cd musrv`
-- `cargo build --release`
-- Binary at `target/release/musrv`
-
-Docker
-- Pull image:
+## Install
+- Cargo (from source):
+  - `git clone https://github.com/smoqadam/musrv && cd musrv`
+  - `cargo install --path .`
+- Docker:
   - `docker pull ghcr.io/smoqadam/musrv:latest`
-- Run, serving `/music` on port 8080:
-  - `docker run --rm -p 8080:8080 -v /path/to/music:/music ghcr.io/smoqadam/musrv:latest serve /music --bind 0.0.0.0 --port 8080`
 
-Usage
-- Serve a directory:
-  - `musrv serve /path/to/music --bind 0.0.0.0 --port 8080`
-- Nested albums (full parent path):
-  - `musrv serve /path/to/music --album-depth 0`
-- Two-level album keys (e.g., Artist/Album):
-  - `musrv serve /path/to/music --album-depth 2`
-- Open the UI:
-  - `http://<LAN-IP>:8080/`
-- Playlists:
-  - Library: `http://<LAN-IP>:8080/library.m3u8`
-  - Album: `http://<LAN-IP>:8080/album/<AlbumName>.m3u8`
-- Rescan (optional):
-  - `GET http://<LAN-IP>:8080/admin/rescan` (the UI has a Rescan button)
+## Quick Start
+- Binary: `musrv serve /path/to/music --bind 0.0.0.0 --port 8080`
+- Docker: `docker run --rm -p 8080:8080 -v /music:/music ghcr.io/smoqadam/musrv:latest serve /music --bind 0.0.0.0 --port 8080`
+- Open: `http://<LAN-IP>:8080/`
 
-Notes
-- When binding to `0.0.0.0`, musrv prints a LAN-accessible URL for convenience.
-- Album grouping defaults to first-level directories (`--album-depth 1`). Set `--album-depth 0` to group by full parent path or `--album-depth N` to use the first N path components.
-- Files directly under the root are grouped into a virtual "Singles" album (or "Singles (root)" if that name collides).
-- Hidden/system paths are filtered by default.
+## Usage
+- Album depth (default 1):
+  - Full parent path: `--album-depth 0`
+  - First N components: `--album-depth N`
+- Endpoints:
+  - UI: `/`
+  - JSON: `/library.json`
+  - Playlists: `/library.m3u8`, `/album/<AlbumName>.m3u8`
+  - Rescan: `GET /admin/rescan`
+ - External players:
+   - Feed `http://<LAN-IP>:8080/library.m3u8` (or any album M3U8) to players that support online M3U/M3U8 like Apple Music, VLC, foobar2000, etc.
 
-Development
-- Lint and format: `cargo fmt --all` and `cargo clippy -- -D warnings`
-- Tests: `cargo test --all`
+## Notes
+- Binding to `0.0.0.0` prints a LAN URL; playlists also use a LAN IP.
+- Root-level files appear in a virtual “Singles” album (or “Singles (root)” when colliding).
+- Hidden/system files are ignored; symlinks are not followed.
 
-CI
-- GitHub Actions runs fmt, clippy, tests on every push/PR
-- Docker image is built and pushed to `ghcr.io/smoqadam/musrv` on pushes to the default branch and version tags (`v*.*.*`)
+## Development
+
+- Format/lint/tests: `cargo fmt --all`, `cargo clippy -- -D warnings`, `cargo test --all`
+- CI: PRs run fmt + clippy + tests. Pushes build multi‑arch Docker images to `ghcr.io/smoqadam/musrv`.

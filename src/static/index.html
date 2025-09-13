@@ -52,7 +52,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             font-weight: 200;
-            line-height: 1.7;
+            line-height: 1.6;
             background: var(--bg);
             color: var(--text);
             font-size: 14px;
@@ -60,47 +60,106 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 80px 32px 140px;
-            min-height: calc(100vh - 80px);
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(253, 253, 253, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
         }
 
-        header {
-            margin-bottom: 64px;
-            text-align: center;
+        @media (prefers-color-scheme: dark) {
+            .header {
+                background: rgba(15, 15, 15, 0.95);
+            }
         }
 
         .header-content {
-            display: inline-flex;
-            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: 100;
             margin: 0;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
             color: var(--text);
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 200;
             margin: 0;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
         }
 
-        .controls {
-            margin-top: 32px;
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .github-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 0.1px;
+            transition: color 0.2s ease;
+        }
+
+        .github-link:hover {
+            color: var(--text);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 120px;
+            min-height: calc(100vh - 160px);
+        }
+
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 24px 0 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .library-title {
+            font-size: 16px;
+            font-weight: 200;
+            color: var(--text);
+            margin: 0;
+            letter-spacing: -0.1px;
+        }
+
+        .library-controls {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
+            align-items: center;
         }
 
         button, .btn {
@@ -108,14 +167,14 @@
             border: 1px solid var(--border);
             background: var(--card);
             color: var(--text-muted);
-            padding: 10px 18px;
-            border-radius: 32px;
+            padding: 8px 16px;
+            border-radius: 24px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 300;
             transition: all 0.2s ease;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             text-decoration: none;
             display: inline-block;
         }
@@ -124,47 +183,46 @@
             border-color: var(--border-hover);
             background: var(--hover);
             color: var(--text);
-            transform: translateY(-1px);
+        }
+
+        .primary-btn {
+            background: var(--accent-light);
+            color: var(--accent);
+            border-color: var(--border);
+        }
+
+        .primary-btn:hover {
+            background: var(--accent);
+            color: var(--card);
+            border-color: var(--accent);
         }
 
         .albums {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
         }
 
-        details.album {
+        .album {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        details.album:hover {
-            box-shadow: var(--shadow-lg);
+        .album:hover {
             border-color: var(--border-hover);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
-        details > summary {
-            list-style: none;
-            cursor: pointer;
-            padding: 28px;
+        .album-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            transition: background 0.2s ease;
-        }
-
-        details > summary::-webkit-details-marker {
-            display: none;
-        }
-
-        details > summary:hover {
-            background: var(--hover);
+            gap: 16px;
         }
 
         .album-info {
@@ -174,33 +232,35 @@
 
         .album-title {
             font-weight: 300;
-            font-size: 18px;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.2px;
+            font-size: 15px;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.1px;
             line-height: 1.3;
         }
 
         .album-meta {
             color: var(--text-muted);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 200;
             margin: 0;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .album-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             flex-shrink: 0;
         }
 
         .play-album {
-            padding: 8px 16px !important;
-            font-size: 11px !important;
+            padding: 6px 12px !important;
+            font-size: 10px !important;
             background: var(--accent-light);
             color: var(--accent);
             border-color: var(--border);
-            font-weight: 300;
         }
 
         .play-album:hover {
@@ -212,16 +272,13 @@
         .album-meta a {
             color: var(--text-muted);
             text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s ease;
         }
 
         .album-meta a:hover {
-            border-bottom-color: var(--text-muted);
+            color: var(--text);
         }
 
         .copy-btn {
-            margin-left: 8px;
             padding: 2px 6px !important;
             font-size: 9px !important;
             border-radius: 4px;
@@ -231,21 +288,21 @@
 
         .copy-btn:hover {
             opacity: 1;
-            transform: translateY(-1px);
         }
 
         .tracks {
-            border-top: 1px solid var(--border);
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .track {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            padding: 16px 28px;
+            gap: 12px;
+            padding: 12px 20px;
             border-bottom: 1px solid var(--border);
-            transition: background 0.2s ease;
+            transition: background 0.15s ease;
         }
 
         .track:last-child {
@@ -256,27 +313,36 @@
             background: var(--hover);
         }
 
-        .track-title {
+        .track-info {
             min-width: 0;
+            flex: 1;
+        }
+
+        .track-title {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 200;
-            letter-spacing: 0.1px;
+            letter-spacing: 0.05px;
+            margin-bottom: 2px;
+        }
+
+        .track-duration {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-weight: 200;
         }
 
         .play-track {
-            padding: 6px 14px !important;
-            font-size: 10px !important;
+            padding: 4px 8px !important;
+            font-size: 9px !important;
             opacity: 0.6;
-            transition: all 0.2s ease;
-            font-weight: 300;
+            transition: all 0.15s ease;
         }
 
         .track:hover .play-track {
             opacity: 1;
-            transform: translateY(-1px);
         }
 
         .player {
@@ -297,37 +363,36 @@
         }
 
         .player-content {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px 32px;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
         }
 
         .player-controls {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-shrink: 0;
             align-items: center;
         }
 
         .player-controls button {
-            padding: 12px;
+            padding: 10px;
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 12px;
             border: 1px solid var(--border);
             transition: all 0.2s ease;
         }
 
         .player-controls button:hover {
             background: var(--hover);
-            transform: translateY(-1px);
         }
 
         .player-info {
@@ -335,17 +400,17 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
         .now-playing {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 300;
             color: var(--text);
-            letter-spacing: 0.1px;
+            letter-spacing: 0.05px;
         }
 
         .progress-container {
@@ -355,16 +420,16 @@
         }
 
         .time-display {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 200;
             color: var(--text-muted);
-            min-width: 35px;
+            min-width: 30px;
             text-align: center;
         }
 
         .progress-bar {
             flex: 1;
-            height: 4px;
+            height: 3px;
             background: var(--border);
             border-radius: 2px;
             cursor: pointer;
@@ -387,9 +452,16 @@
             flex-shrink: 0;
         }
 
+        .volume-btn {
+            padding: 8px !important;
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 10px !important;
+        }
+
         .volume-slider {
-            width: 80px;
-            height: 4px;
+            width: 60px;
+            height: 3px;
             background: var(--border);
             border-radius: 2px;
             cursor: pointer;
@@ -410,63 +482,62 @@
             pointer-events: none;
         }
 
-        details[open] > summary {
-            background: var(--hover);
-        }
-
         @media (max-width: 768px) {
-            .container {
-                padding: 48px 20px 140px;
+            .header-content {
+                padding: 12px 16px;
+                gap: 16px;
+            }
+            
+            .main-content {
+                padding: 0 16px 120px;
             }
             
             .albums {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                gap: 12px;
             }
             
-            h1 {
-                font-size: 24px;
-            }
-            
-            .controls {
+            .library-controls {
                 gap: 6px;
             }
             
-            button, .btn {
-                padding: 8px 14px;
-                font-size: 11px;
-            }
-            
-            details > summary {
-                padding: 20px;
-            }
-            
-            .track {
-                padding: 12px 20px;
-            }
-            
             .player-content {
-                padding: 16px 20px;
-                gap: 16px;
+                padding: 12px 16px;
+                gap: 12px;
+            }
+            
+            .volume-control {
+                display: none;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <h1>musrv</h1>
-                <p class="subtitle">Minimal zero‑config music server.</p>
-                <div class="controls">
-                    <button id="playAll">▶ Play All</button>
-                    <button id="rescanBtn" title="Rescan library">⟳ Rescan</button>
-                    <a class="btn" href="library.m3u8">Flat playlist</a>
-                    <a class="btn" href="https://github.com/smoqadam/musrv" target="_blank" rel="noopener">GitHub</a>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-text">
+                    <h1>musrv</h1>
+                    <p class="subtitle">Minimal zero‑config music server</p>
                 </div>
             </div>
-        </header>
+            <div class="header-actions">
+                <a class="github-link" href="https://github.com/smoqadam/musrv" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="library-header">
+            <h2 class="library-title">Music Library</h2>
+            <div class="library-controls">
+                <button id="playAll" class="primary-btn">▶ Play All</button>
+                <button id="rescanBtn" title="Rescan library">⟳ Rescan</button>
+                <a class="btn" href="library.m3u8">M3U Playlist</a>
+            </div>
+        </div>
+        
         <div id="albums" class="albums"></div>
     </div>
     
@@ -488,7 +559,7 @@
                 </div>
             </div>
             <div class="volume-control">
-                <button id="volumeBtn" title="Mute/Unmute">🔊</button>
+                <button id="volumeBtn" class="volume-btn" title="Mute/Unmute">🔊</button>
                 <div class="volume-slider" id="volumeSlider">
                     <div class="volume-fill" id="volumeFill"></div>
                 </div>
@@ -631,13 +702,32 @@
         for (const a of lib.albums) {
             const playlist = '/album/' + encodeURIComponent(a.name) + '.m3u8';
             const playlistUrl = window.location.origin + playlist;
-            html += `<details class="album" data-album="${a.name}"><summary><div class="album-info"><h3 class="album-title">${a.name}</h3><p class="album-meta">${a.tracks.length} tracks • <a href="${playlist}">playlist</a><button class="btn copy-btn" onclick="copyToClipboard('${playlistUrl}', this)">Copy</button></p></div><div class="album-actions"><a class="btn play-album" href="#">Play</a></div></summary><div class="tracks">`;
+            html += `<div class="album" data-album="${a.name}">
+                        <div class="album-header">
+                            <div class="album-info">
+                                <h3 class="album-title">${a.name}</h3>
+                                <div class="album-meta">
+                                    ${a.tracks.length} tracks • 
+                                    <a href="${playlist}">playlist</a>
+                                    <button class="btn copy-btn" onclick="copyToClipboard('${playlistUrl}', this)">Copy</button>
+                                </div>
+                            </div>
+                            <div class="album-actions">
+                                <button class="btn play-album">Play</button>
+                            </div>
+                        </div>
+                        <div class="tracks">`;
             for (const t of a.tracks) {
                 const title = t.path.split('/').pop();
                 const url = encodeSegments(t.path);
-                html += `<div class="track" data-title="${title}" data-url="${url}"><div class="track-title">${title}</div><a class="btn play-track" href="#">Play</a></div>`;
+                html += `<div class="track" data-title="${title}" data-url="${url}">
+                            <div class="track-info">
+                                <div class="track-title">${title}</div>
+                            </div>
+                            <button class="btn play-track">Play</button>
+                        </div>`;
             }
-            html += `</div></details>`;
+            html += `</div></div>`;
         }
         albumsEl.innerHTML = html;
         attachAlbumHandlers();
@@ -645,14 +735,12 @@
 
     function attachAlbumHandlers() {
         $('#playAll').addEventListener('click', () => { 
-            const all = $$('.track').map(r => rowToTrack(r, r.closest('details').dataset.album)); 
+            const all = $$('.track').map(r => rowToTrack(r, r.closest('.album').dataset.album)); 
             setQueue(all, 0);
         });
         
-        $$('details.album').forEach(d => {
+        $$('.album').forEach(d => {
             d.querySelector('.play-album').addEventListener('click', e => { 
-                e.preventDefault(); 
-                e.stopPropagation(); 
                 const rows = Array.from(d.querySelectorAll('.track')); 
                 const tracks = rows.map(r => rowToTrack(r, d.dataset.album)); 
                 setQueue(tracks, 0);
