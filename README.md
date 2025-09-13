@@ -12,6 +12,9 @@ Minimal, zero‑config music server.
 - Static streaming under the chosen root with traversal protection
 - Rescan endpoint: `GET /admin/rescan` (atomic swap of the library)
 - Album grouping by path depth; root files collected as “Singles”
+  
+<img width="300" height="1490" alt="Image" src="https://github.com/user-attachments/assets/2f384f12-61f8-4c6c-9b00-128092ade823" />
+
 
 ## Install
 - Cargo (from source):
@@ -19,6 +22,9 @@ Minimal, zero‑config music server.
   - `cargo install --path .`
 - Docker:
   - `docker pull ghcr.io/smoqadam/musrv:latest`
+- Install script (latest release):
+  - `curl -fsSL https://raw.githubusercontent.com/smoqadam/musrv/main/install.sh | sh`
+  - Set a specific version with `MUSRV_VERSION=v0.1.0`.
 
 ## Quick Start
 - Binary: `musrv serve /path/to/music --bind 0.0.0.0 --port 8080`
@@ -34,8 +40,8 @@ Minimal, zero‑config music server.
   - JSON: `/library.json`
   - Playlists: `/library.m3u8`, `/album/<AlbumName>.m3u8`
   - Rescan: `GET /admin/rescan`
- - External players:
-   - Feed `http://<LAN-IP>:8080/library.m3u8` (or any album M3U8) to players that support online M3U/M3U8 like Apple Music, VLC, foobar2000, etc.
+- External players:
+  - Feed `http://<LAN-IP>:8080/library.m3u8` (or any album M3U8) to players that support online M3U/M3U8 like Apple Music, VLC, foobar2000, etc.
 
 ## Notes
 - Binding to `0.0.0.0` prints a LAN URL; playlists also use a LAN IP.

@@ -32,8 +32,6 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             build-tool: cargo
-          - target: aarch64-unknown-linux-gnu
-            build-tool: cross
           - target: armv7-unknown-linux-gnueabihf
             build-tool: cross
     steps:
@@ -58,8 +56,6 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-latest
-            target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -68,18 +64,5 @@ jobs:
         with:
           bin: musrv
           target: ${{ matrix.target }}
-          ref: refs/tags/${{ github.event.inputs.tag }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  upload-windows:
-    needs: create-release
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: musrv
-          target: x86_64-pc-windows-msvc
           ref: refs/tags/${{ github.event.inputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
