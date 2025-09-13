@@ -31,6 +31,8 @@ enum Commands {
         bind: Option<IpAddr>,
         #[arg(long)]
         gitignore: bool,
+        #[arg(long, value_parser = clap::value_parser!(usize))]
+        album_depth: Option<usize>,
     },
 }
 
@@ -46,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
     fmt().with_env_filter(filter).init();
     match cli.command {
         Commands::Serve {
-            path, port, bind, ..
+            path, port, bind, album_depth, ..
         } => {
             if !Path::new(&path).exists() {
                 anyhow::bail!("path does not exist: {}", path.display());
@@ -58,7 +60,8 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::bail!("path is not a directory: {}", path.display());
             }
             let root = std::fs::canonicalize(&path).unwrap_or(path);
-            let lib = Arc::new(library::Library::scan(root.clone()));
+            let depth = album_depth.unwrap_or(1);
+            let lib = Arc::new(library::Library::scan_with_depth(root.clone(), depth));
             let bind = bind.unwrap_or_else(|| "127.0.0.1".parse().unwrap());
             let port = port.unwrap_or(8080);
             let display_host = if bind.is_unspecified() {
@@ -75,6 +78,7 @@ async fn main() -> anyhow::Result<()> {
                 lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
                 base: base.clone(),
                 root: root.clone(),
+                album_depth: depth,
             };
             let app: Router = server::build_router(state);
             let addr = SocketAddr::new(bind, port);

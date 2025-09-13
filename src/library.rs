@@ -25,7 +25,12 @@ pub struct Library {
 }
 
 impl Library {
+    #[allow(dead_code)]
     pub fn scan(root: PathBuf) -> Self {
+        Self::scan_with_depth(root, 1)
+    }
+
+    pub fn scan_with_depth(root: PathBuf, album_depth: usize) -> Self {
         let mut tracks = Vec::new();
         let iter = WalkDir::new(root.clone())
             .follow_links(false)
@@ -68,17 +73,23 @@ impl Library {
 
         let mut by_album: HashMap<String, Vec<Track>> = HashMap::new();
         for t in &tracks {
-            let mut comps = t.path.components();
-            if let Some(first) = comps.next() {
-                if comps.next().is_none() {
-                    continue;
-                }
-                let name = first.as_os_str().to_string_lossy().to_string();
-                if name.is_empty() {
-                    continue;
-                }
-                by_album.entry(name).or_default().push(t.clone());
-            }
+            let parent = t.path.parent();
+            let Some(parent) = parent else { continue }; // root-level handled as Singles later
+            let comps: Vec<_> = parent.components().collect();
+            if comps.is_empty() { continue; }
+            let key = if album_depth == 0 {
+                parent.to_string_lossy().to_string()
+            } else {
+                let take = comps.len().min(album_depth);
+                let parts: Vec<String> = comps
+                    .iter()
+                    .take(take)
+                    .map(|c| c.as_os_str().to_string_lossy().to_string())
+                    .collect();
+                parts.join("/")
+            };
+            if key.is_empty() { continue; }
+            by_album.entry(key).or_default().push(t.clone());
         }
         let mut albums: Vec<Album> = by_album
             .into_iter()

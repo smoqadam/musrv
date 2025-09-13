@@ -6,6 +6,7 @@ Overview
 - Exposes playlists:
   - `/library.m3u8` — the entire library
   - `/album/<AlbumName>.m3u8` — a single album
+- JSON API: `/library.json` — albums + tracks for the UI
 - Streams files with HTTP Range support (seek works in most players)
 - Safe-by-default static serving (no traversal; hides dotfiles)
 - Hot refresh: `GET /admin/rescan` rescans and atomically swaps the library
@@ -34,6 +35,10 @@ Docker
 Usage
 - Serve a directory:
   - `musrv serve /path/to/music --bind 0.0.0.0 --port 8080`
+- Nested albums (full parent path):
+  - `musrv serve /path/to/music --album-depth 0`
+- Two-level album keys (e.g., Artist/Album):
+  - `musrv serve /path/to/music --album-depth 2`
 - Open the UI:
   - `http://<LAN-IP>:8080/`
 - Playlists:
@@ -44,7 +49,8 @@ Usage
 
 Notes
 - When binding to `0.0.0.0`, musrv prints a LAN-accessible URL for convenience.
-- Album names are the first-level directories under the chosen root; files directly under root appear only in the library playlist.
+- Album grouping defaults to first-level directories (`--album-depth 1`). Set `--album-depth 0` to group by full parent path or `--album-depth N` to use the first N path components.
+- Files directly under the root are grouped into a virtual "Singles" album (or "Singles (root)" if that name collides).
 - Hidden/system paths are filtered by default.
 
 Development
@@ -54,4 +60,3 @@ Development
 CI
 - GitHub Actions runs fmt, clippy, tests on every push/PR
 - Docker image is built and pushed to `ghcr.io/smoqadam/musrv` on pushes to the default branch and version tags (`v*.*.*`)
-
