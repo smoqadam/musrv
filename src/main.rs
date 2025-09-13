@@ -1,10 +1,11 @@
 mod library;
+mod playlist;
 
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use axum::{extract::State, http::header, routing::get, Router};
+use axum::{extract::{Path as AxPath, State}, http::header, routing::get, Router};
 use tower_http::services::ServeDir;
 use clap::{Parser, Subcommand};
 
@@ -50,12 +51,16 @@ async fn main() {
             let files = ServeDir::new(root.clone());
             let app = Router::new()
                 .route("/library.m3u8", get(library_m3u8))
+                .route("/album/*name", get(album_m3u8))
                 .nest_service("/", files)
                 .with_state(state);
             let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
             println!("listen: http://{}:{}", bind, port);
-            println!("files: {}", lib.files().len());
+            println!("files: {}", lib.tracks().len());
+            for a in lib.albums() {
+                println!("album: {}album/{}.m3u8", base, a.name);
+            }
             println!("playlist: {}library.m3u8", base);
             let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
             axum::serve(listener, app).await.unwrap();
@@ -64,19 +69,26 @@ async fn main() {
 }
 
 async fn library_m3u8(State(state): State<AppState>) -> impl axum::response::IntoResponse {
-    let mut body = String::from("#EXTM3U\n");
-    for f in state.lib.files() {
-        let rel = f.strip_prefix(&state.root).unwrap_or(f);
-        let name = rel.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        let p = rel.to_string_lossy().replace('\\', "/");
-        let encoded = p.split('/')
-            .map(|s| urlencoding::encode(s).into_owned())
-            .collect::<Vec<_>>()
-            .join("/");
-        body.push_str(&format!("#EXTINF:-1,{}\n{}{}\n", name, state.base, encoded));
-    }
+    let body = playlist::render_m3u8(&state.base, &state.root, state.lib.tracks());
     ([
         (header::CONTENT_TYPE, "audio/x-mpegurl; charset=utf-8"),
         (header::CACHE_CONTROL, "no-cache"),
     ], body)
+}
+
+async fn album_m3u8(AxPath(mut name): AxPath<String>, State(state): State<AppState>) -> impl axum::response::IntoResponse {
+    if let Some(stripped) = name.strip_suffix(".m3u8") { name = stripped.to_string(); }
+    if let Ok(decoded) = urlencoding::decode(&name) { name = decoded.into_owned(); }
+    if let Some(album) = state.lib.album_by_name(&name) {
+        let body = playlist::render_m3u8(&state.base, &state.root, &album.tracks);
+        ([
+            (header::CONTENT_TYPE, "audio/x-mpegurl; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ], body)
+    } else {
+        ([
+            (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ], String::from("#EXTM3U\n"))
+    }
 }
