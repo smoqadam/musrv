@@ -1,16 +1,16 @@
+use axum::Json;
+use axum::http::Request;
 use axum::{
     Router,
     extract::{Path as AxPath, State},
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     response::IntoResponse,
     routing::get,
 };
-use axum::http::Request;
-use tower::util::ServiceExt;
-use tower_http::{services::ServeFile, trace::TraceLayer};
-use axum::Json;
 use serde::Serialize;
 use std::sync::Arc;
+use tower::util::ServiceExt;
+use tower_http::{services::ServeFile, trace::TraceLayer};
 
 use crate::playlist::render_m3u8;
 
@@ -28,7 +28,7 @@ pub fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn index(State(state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
+async fn index(State(_state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
     let body = include_str!("../static/index.html");
     Ok((
         [
@@ -52,16 +52,46 @@ async fn library_m3u8(State(state): State<AppState>) -> impl axum::response::Int
 }
 
 #[derive(Serialize)]
-struct JsonTrack { path: String, size: Option<u64> }
+struct JsonTrack {
+    path: String,
+    size: Option<u64>,
+}
 #[derive(Serialize)]
-struct JsonAlbum { name: String, tracks: Vec<JsonTrack> }
+struct JsonAlbum {
+    name: String,
+    tracks: Vec<JsonTrack>,
+}
 #[derive(Serialize)]
-struct JsonLibrary { albums: Vec<JsonAlbum>, tracks: Vec<JsonTrack> }
+struct JsonLibrary {
+    albums: Vec<JsonAlbum>,
+    tracks: Vec<JsonTrack>,
+}
 
 async fn library_json(State(state): State<AppState>) -> impl axum::response::IntoResponse {
     let lib = state.lib.load();
-    let tracks: Vec<JsonTrack> = lib.tracks().iter().map(|t| JsonTrack { path: t.path.to_string_lossy().replace('\\', "/"), size: t.size }).collect();
-    let albums: Vec<JsonAlbum> = lib.albums().iter().map(|a| JsonAlbum { name: a.name.clone(), tracks: a.tracks.iter().map(|t| JsonTrack { path: t.path.to_string_lossy().replace('\\', "/"), size: t.size }).collect() }).collect();
+    let tracks: Vec<JsonTrack> = lib
+        .tracks()
+        .iter()
+        .map(|t| JsonTrack {
+            path: t.path.to_string_lossy().replace('\\', "/"),
+            size: t.size,
+        })
+        .collect();
+    let albums: Vec<JsonAlbum> = lib
+        .albums()
+        .iter()
+        .map(|a| JsonAlbum {
+            name: a.name.clone(),
+            tracks: a
+                .tracks
+                .iter()
+                .map(|t| JsonTrack {
+                    path: t.path.to_string_lossy().replace('\\', "/"),
+                    size: t.size,
+                })
+                .collect(),
+        })
+        .collect();
     let body = JsonLibrary { albums, tracks };
     Json(body)
 }
@@ -105,21 +135,45 @@ async fn static_file(
     State(state): State<AppState>,
     req: Request<axum::body::Body>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let decoded = helpers::validate_request_path(&path).map_err(|_| (StatusCode::NOT_FOUND, String::new()))?;
+    let decoded = helpers::validate_request_path(&path)
+        .map_err(|_| (StatusCode::NOT_FOUND, String::new()))?;
     let abs = state.root.join(&decoded);
-    let abs = match tokio::fs::canonicalize(&abs).await { Ok(p) => p, Err(_) => return Err((StatusCode::NOT_FOUND, String::new())) };
-    if !abs.starts_with(&state.root) { return Err((StatusCode::NOT_FOUND, String::new())); }
+    let abs = match tokio::fs::canonicalize(&abs).await {
+        Ok(p) => p,
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::new())),
+    };
+    if !abs.starts_with(&state.root) {
+        return Err((StatusCode::NOT_FOUND, String::new()));
+    }
     let svc = ServeFile::new(abs);
-    let res = svc.oneshot(req).await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, String::new()))?;
+    let res = svc
+        .oneshot(req)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, String::new()))?;
     Ok(res)
 }
 
 async fn admin_rescan(State(state): State<AppState>) -> impl axum::response::IntoResponse {
     let root = state.root.clone();
-    let new_lib = match tokio::task::spawn_blocking(move || crate::library::Library::scan(root)).await {
-        Ok(lib) => lib,
-        Err(_) => return ([ (header::CONTENT_TYPE, "text/plain; charset=utf-8"), (header::CACHE_CONTROL, "no-cache") ], String::from("error")),
-    };
+    let new_lib =
+        match tokio::task::spawn_blocking(move || crate::library::Library::scan(root)).await {
+            Ok(lib) => lib,
+            Err(_) => {
+                return (
+                    [
+                        (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+                        (header::CACHE_CONTROL, "no-cache"),
+                    ],
+                    String::from("error"),
+                );
+            }
+        };
     state.lib.store(Arc::new(new_lib));
-    ([ (header::CONTENT_TYPE, "text/plain; charset=utf-8"), (header::CACHE_CONTROL, "no-cache") ], String::from("ok"))
+    (
+        [
+            (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        String::from("ok"),
+    )
 }
