@@ -33,38 +33,36 @@ impl Library {
             .filter_entry(|e| !is_hidden_entry(e));
         for entry in iter.filter_map(|e| e.ok()) {
             let p = entry.path();
-            if p.is_file() {
-                if let Some(ext) = p
+            if p.is_file()
+                && let Some(ext) = p
                     .extension()
                     .and_then(|e| e.to_str())
                     .map(|s| s.to_ascii_lowercase())
-                {
-                    if matches!(
-                        ext.as_str(),
-                        "mp3"
-                            | "flac"
-                            | "wav"
-                            | "aac"
-                            | "m4a"
-                            | "ogg"
-                            | "opus"
-                            | "wma"
-                            | "aif"
-                            | "aiff"
-                            | "alac"
-                            | "pcm"
-                            | "mp2"
-                            | "mpga"
-                            | "ape"
-                    ) {
-                        if is_hidden_path(p) {
-                            continue;
-                        }
-                        let rel = p.strip_prefix(&root).unwrap_or(p).to_path_buf();
-                        let size = fs::metadata(p).ok().map(|m| m.len());
-                        tracks.push(Track { path: rel, size });
-                    }
+                && matches!(
+                    ext.as_str(),
+                    "mp3"
+                        | "flac"
+                        | "wav"
+                        | "aac"
+                        | "m4a"
+                        | "ogg"
+                        | "opus"
+                        | "wma"
+                        | "aif"
+                        | "aiff"
+                        | "alac"
+                        | "pcm"
+                        | "mp2"
+                        | "mpga"
+                        | "ape"
+                )
+            {
+                if is_hidden_path(p) {
+                    continue;
                 }
+                let rel = p.strip_prefix(&root).unwrap_or(p).to_path_buf();
+                let size = fs::metadata(p).ok().map(|m| m.len());
+                tracks.push(Track { path: rel, size });
             }
         }
 

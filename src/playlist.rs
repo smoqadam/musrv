@@ -28,8 +28,14 @@ mod tests {
     #[test]
     fn m3u8_renders_crlf_and_urls() {
         let tracks = vec![
-            Track { path: PathBuf::from("Album/song one.mp3"), size: None },
-            Track { path: PathBuf::from("Root.mp3"), size: Some(123) },
+            Track {
+                path: PathBuf::from("Album/song one.mp3"),
+                size: None,
+            },
+            Track {
+                path: PathBuf::from("Root.mp3"),
+                size: Some(123),
+            },
         ];
         let out = render_m3u8("http://h/", Path::new("/"), &tracks);
         assert!(out.starts_with("#EXTM3U\r\n"));

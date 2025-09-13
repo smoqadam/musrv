@@ -1,4 +1,9 @@
-pub fn parse_album_name(mut name: String) -> Result<String, ()> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputError {
+    Invalid,
+}
+
+pub fn parse_album_name(mut name: String) -> Result<String, InputError> {
     if let Some(stripped) = name.strip_suffix(".m3u8") {
         name = stripped.to_string();
     }
@@ -6,18 +11,20 @@ pub fn parse_album_name(mut name: String) -> Result<String, ()> {
         name = decoded.into_owned();
     }
     if name.is_empty() || name.starts_with('.') || name.contains('/') || name.contains('\\') {
-        return Err(());
+        return Err(InputError::Invalid);
     }
     Ok(name)
 }
 
-pub fn validate_request_path(path: &str) -> Result<String, ()> {
+pub fn validate_request_path(path: &str) -> Result<String, InputError> {
     if path.is_empty() || path == "/" {
-        return Err(());
+        return Err(InputError::Invalid);
     }
-    let decoded = urlencoding::decode(path).map_err(|_| ())?.into_owned();
+    let decoded = urlencoding::decode(path)
+        .map_err(|_| InputError::Invalid)?
+        .into_owned();
     if decoded.contains("..") || decoded.starts_with('/') || decoded.contains('\0') {
-        return Err(());
+        return Err(InputError::Invalid);
     }
     for seg in decoded.split('/') {
         if seg.is_empty() {
@@ -28,7 +35,7 @@ pub fn validate_request_path(path: &str) -> Result<String, ()> {
             || seg == "desktop.ini"
             || seg.starts_with("._")
         {
-            return Err(());
+            return Err(InputError::Invalid);
         }
     }
     Ok(decoded)

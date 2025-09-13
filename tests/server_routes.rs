@@ -26,7 +26,12 @@ async fn library_json_and_playlists() {
 
     let res = app
         .clone()
-        .oneshot(Request::builder().uri("/library.json").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/library.json")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert!(res.status().is_success());
@@ -36,16 +41,29 @@ async fn library_json_and_playlists() {
 
     let res2 = app
         .clone()
-        .oneshot(Request::builder().uri("/library.m3u8").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/library.m3u8")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert!(res2.status().is_success());
-    let ctype = res2.headers().get(axum::http::header::CONTENT_TYPE).unwrap();
+    let ctype = res2
+        .headers()
+        .get(axum::http::header::CONTENT_TYPE)
+        .unwrap();
     assert!(ctype.to_str().unwrap().starts_with("audio/x-mpegurl"));
 
     let res3 = app
         .clone()
-        .oneshot(Request::builder().uri("/album/Album1.m3u8").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/album/Album1.m3u8")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert!(res3.status().is_success());
