@@ -9,4 +9,5 @@ pub struct AppState {
     pub lib: Arc<ArcSwap<Library>>,
     pub base: String,
     pub root: PathBuf,
+    pub album_depth: usize,
 }

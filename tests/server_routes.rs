@@ -21,6 +21,7 @@ async fn library_json_and_playlists() {
         lib: Arc::new(arc_swap::ArcSwap::from(Arc::new(lib))),
         base: "http://127.0.0.1:9999/".to_string(),
         root: root.clone(),
+        album_depth: 1,
     };
     let app = musrv::server::build_router(state);
 

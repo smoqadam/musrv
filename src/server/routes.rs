@@ -155,19 +155,23 @@ async fn static_file(
 
 async fn admin_rescan(State(state): State<AppState>) -> impl axum::response::IntoResponse {
     let root = state.root.clone();
-    let new_lib =
-        match tokio::task::spawn_blocking(move || crate::library::Library::scan(root)).await {
-            Ok(lib) => lib,
-            Err(_) => {
-                return (
-                    [
-                        (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
-                        (header::CACHE_CONTROL, "no-cache"),
-                    ],
-                    String::from("error"),
-                );
-            }
-        };
+    let depth = state.album_depth;
+    let new_lib = match tokio::task::spawn_blocking(move || {
+        crate::library::Library::scan_with_depth(root, depth)
+    })
+    .await
+    {
+        Ok(lib) => lib,
+        Err(_) => {
+            return (
+                [
+                    (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+                    (header::CACHE_CONTROL, "no-cache"),
+                ],
+                String::from("error"),
+            );
+        }
+    };
     state.lib.store(Arc::new(new_lib));
     (
         [
