@@ -10,12 +10,12 @@ pub fn encode_path(rel: &str) -> String {
 }
 
 pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Track]) -> String {
-    let mut body = String::from("#EXTM3U\n");
+    let mut body = String::from("#EXTM3U\r\n");
     for t in tracks {
         let name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
         let rel = t.path.to_string_lossy().replace('\\', "/");
         let encoded = encode_path(&rel);
-        body.push_str(&format!("#EXTINF:-1,{name}\n{base}{encoded}\n"));
+        body.push_str(&format!("#EXTINF:0,{name}\r\n{base}{encoded}\r\n"));
     }
     body
 }

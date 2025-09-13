@@ -61,14 +61,6 @@ async fn main() -> anyhow::Result<()> {
             let lib = Arc::new(library::Library::scan(root.clone()));
             let bind = bind.unwrap_or_else(|| "127.0.0.1".parse().unwrap());
             let port = port.unwrap_or(8080);
-            let base = format!("http://{bind}:{port}/");
-            let state = server::AppState {
-                lib: lib.clone(),
-                base: base.clone(),
-                root: root.clone(),
-            };
-            let app: Router = server::build_router(state);
-            let addr = SocketAddr::new(bind, port);
             let display_host = if bind.is_unspecified() {
                 match local_ip_address::local_ip() {
                     Ok(std::net::IpAddr::V4(v4)) => v4.to_string(),
@@ -78,16 +70,23 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 bind.to_string()
             };
-            let display_base = format!("http://{display_host}:{port}/");
+            let base = format!("http://{display_host}:{port}/");
+            let state = server::AppState {
+                lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
+                base: base.clone(),
+                root: root.clone(),
+            };
+            let app: Router = server::build_router(state);
+            let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
-            println!("listen: {}", &display_base.trim_end_matches('/'));
+            println!("listen: {}", &base.trim_end_matches('/'));
             println!("files: {}", lib.tracks().len());
             for a in lib.albums() {
                 let enc = playlist::encode_path(&a.name);
-                println!("album: {display_base}album/{enc}.m3u8");
+                println!("album: {base}album/{enc}.m3u8");
             }
-            println!("playlist: {display_base}library.m3u8");
-            println!("ui: {}", display_base.trim_end_matches('/'));
+            println!("playlist: {base}library.m3u8");
+            println!("ui: {}", base.trim_end_matches('/'));
             let listener = tokio::net::TcpListener::bind(addr).await?;
             axum::serve(listener, app).await?;
         }
