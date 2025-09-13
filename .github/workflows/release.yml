@@ -1,39 +1,85 @@
 name: Release
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  release-binaries:
+  create-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          ref: refs/tags/${{ github.event.inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: swatinem/rust-cache@v2
-
-      - name: Build and upload binaries
-        uses: taiki-e/upload-rust-binary@v1
+  upload-linux:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            build-tool: cargo
+          - target: aarch64-unknown-linux-gnu
+            build-tool: cross
+          - target: armv7-unknown-linux-gnueabihf
+            build-tool: cross
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/setup-cross-toolchain-action@v1
+        if: ${{ matrix.build-tool == 'cross' }}
+        with:
+          target: ${{ matrix.target }}
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: musrv
-          targets: >-
-            x86_64-unknown-linux-gnu,
-            aarch64-unknown-linux-gnu,
-            armv7-unknown-linux-gnueabihf,
-            x86_64-apple-darwin,
-            aarch64-apple-darwin,
-            x86_64-pc-windows-msvc
-          archive: "+zip":["x86_64-pc-windows-msvc"],tar.gz
-          use-cross: true
+          target: ${{ matrix.target }}
+          build-tool: ${{ matrix.build-tool }}
+          ref: refs/tags/${{ github.event.inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
+  upload-macos:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: musrv
+          target: ${{ matrix.target }}
+          ref: refs/tags/${{ github.event.inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-windows:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: musrv
+          target: x86_64-pc-windows-msvc
+          ref: refs/tags/${{ github.event.inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
