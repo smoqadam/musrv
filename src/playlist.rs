@@ -9,7 +9,7 @@ pub fn encode_path(rel: &str) -> String {
         .join("/")
 }
 
-pub fn render_m3u8(base: &str, root: &Path, tracks: &[Track]) -> String {
+pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Track]) -> String {
     let mut body = String::from("#EXTM3U\n");
     for t in tracks {
         let name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
