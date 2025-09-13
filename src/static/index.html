@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>musrv — minimal music server</title>
+    <meta name="description" content="musrv is a minimal zero‑config music server that scans a folder and serves playlists and tracks instantly." />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
+        
+        :root {
+            --bg: #fafafa;
+            --card: #ffffff;
+            --border: #e8e9ea;
+            --border-hover: #d0d1d3;
+            --text: #1a1a1a;
+            --text-muted: #6b6b6b;
+            --accent: #2563eb;
+            --accent-light: #dbeafe;
+            --hover: #f8f9fa;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
+            --shadow-lg: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a0a0a;
+                --card: #111111;
+                --border: #1f1f1f;
+                --border-hover: #333333;
+                --text: #f5f5f5;
+                --text-muted: #a1a1a1;
+                --accent: #3b82f6;
+                --accent-light: #1e3a8a;
+                --hover: #181818;
+                --shadow: 0 1px 3px rgba(255,255,255,0.02), 0 1px 2px rgba(255,255,255,0.04);
+                --shadow-lg: 0 4px 6px -1px rgba(255,255,255,0.03), 0 2px 4px -1px rgba(255,255,255,0.02);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 60px 24px 120px;
+            min-height: calc(100vh - 80px);
+        }
+
+        header {
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .header-content {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 200;
+            margin: 0;
+            letter-spacing: -0.5px;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 300;
+            margin: 0;
+            letter-spacing: 0.2px;
+        }
+
+        .controls {
+            margin-top: 24px;
+        }
+
+        button, .btn {
+            appearance: none;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 400;
+            transition: all 0.15s ease;
+            letter-spacing: 0.1px;
+        }
+
+        button:hover, .btn:hover {
+            border-color: var(--border-hover);
+            background: var(--hover);
+        }
+
+        .albums {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        details.album {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        details.album:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        details > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            transition: background 0.15s ease;
+        }
+
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details > summary:hover {
+            background: var(--hover);
+        }
+
+        .album-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .album-title {
+            font-weight: 400;
+            font-size: 16px;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.1px;
+        }
+
+        .album-meta {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 300;
+            margin: 0;
+            letter-spacing: 0.1px;
+        }
+
+        .album-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .play-album {
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-color: transparent;
+        }
+
+        .play-album:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .album-meta a {
+            color: #dbeafe;
+        }
+        .tracks {
+            border-top: 1px solid var(--border);
+        }
+
+        .track {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
+        }
+
+        .track:last-child {
+            border-bottom: none;
+        }
+
+        .track:hover {
+            background: var(--hover);
+        }
+
+        .track-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .play-track {
+            padding: 4px 10px !important;
+            font-size: 11px !important;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+        }
+
+        .track:hover .play-track {
+            opacity: 1;
+        }
+
+        .player {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(20px) saturate(180%);
+            z-index: 1000;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .player {
+                background: rgba(17, 17, 17, 0.95);
+            }
+        }
+
+        .player-content {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .player-controls button {
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .now-playing {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        audio {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        details[open] > summary {
+            background: var(--hover);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 16px 120px;
+            }
+            
+            .albums {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .player-content {
+                padding: 12px 16px;
+                gap: 12px;
+            }
+            
+            audio {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>musrv</h1>
+                <p class="subtitle">Minimal zero‑config music server.</p>
+                <div class="controls">
+                    <button id="playAll">▶ Play All</button>
+                    <a class="btn" href="library.m3u8">Flat playlist</a>
+                    <a class="btn" href="https://github.com/smoqadam/musrv" target="_blank" rel="noopener">GitHub</a>
+                </div>
+            </div>
+        </header>
+        <div id="albums" class="albums">
+            {% for album in albums %}
+            <details class="album" data-album="{{ album.name }}">
+                <summary>
+                    <div class="album-info">
+                        <h3 class="album-title">{{ album.name }}</h3>
+                        <p class="album-meta">{{ album.tracks | length }} tracks • <a href="/album/{{ album.name }}.m3u8">playlist</a></p>
+                    </div>
+                    <div class="album-actions">
+                        <a class="btn play-album" href="#">Play</a>
+                    </div>
+                </summary>
+                <div class="tracks">
+                    {% for t in album.tracks %}
+                    <div class="track" data-title="{{ t.title }}" data-url="{{ t.url }}">
+                        <div class="track-title">{{ t.title }}</div>
+                        <a class="btn play-track" href="#">Play</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="player">
+        <div class="player-content">
+            <div class="player-controls">
+                <button id="prevBtn" title="Previous">⏮</button>
+                <button id="playBtn" title="Play/Pause">⏵</button>
+                <button id="nextBtn" title="Next">⏭</button>
+            </div>
+            <div class="now-playing" id="nowPlaying">Nothing playing</div>
+            <audio id="audio" preload="metadata" controls></audio>
+        </div>
+    </div>
+
+    <script>const state = { queue: [], idx: -1 }; const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s)); const audio = $('#audio'); const now = $('#nowPlaying'); const playBtn = $('#playBtn'); const prevBtn = $('#prevBtn'); const nextBtn = $('#nextBtn'); function setQueue(tracks, startIndex = 0) { state.queue = tracks.slice(); state.idx = Math.max(0, Math.min(startIndex, state.queue.length - 1)); playCurrent() } function playCurrent() { const t = state.queue[state.idx]; if (!t) return; audio.src = t.url; now.textContent = `${t.album ? t.album + ' • ' : ''}${t.title || t.url.split('/').pop()}`; audio.play(); playBtn.textContent = '⏸' } function next(delta = 1) { if (!state.queue.length) return; state.idx = (state.idx + delta + state.queue.length) % state.queue.length; playCurrent() } playBtn.addEventListener('click', () => { if (audio.paused) { audio.play(); playBtn.textContent = '⏸' } else { audio.pause(); playBtn.textContent = '⏵' } }); prevBtn.addEventListener('click', () => next(-1)); nextBtn.addEventListener('click', () => next(1)); audio.addEventListener('ended', () => next(1)); function rowToTrack(row, album) { return { title: row.dataset.title, url: row.dataset.url, album } } $('#playAll').addEventListener('click', () => { const all = $$('.track').map(r => rowToTrack(r, r.closest('details').dataset.album)); setQueue(all, 0) }); $$('details.album').forEach(d => { d.querySelector('.play-album').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const rows = Array.from(d.querySelectorAll('.track')); const tracks = rows.map(r => rowToTrack(r, d.dataset.album)); setQueue(tracks, 0) }); Array.from(d.querySelectorAll('.track')).forEach((row, i) => { row.querySelector('.play-track').addEventListener('click', () => { const rows = Array.from(d.querySelectorAll('.track')); const tracks = rows.map(r => rowToTrack(r, d.dataset.album)); setQueue(tracks, i) }) }) });</script>
+</body>
+
+</html>
