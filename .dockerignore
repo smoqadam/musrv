@@ -1,0 +1,9 @@
+target
+.git
+.github
+tests
+Dockerfile
+README.md
+v0.1.0.md
+TODO.md
+**/*.rs.bk
