@@ -76,7 +76,9 @@ impl Library {
             let parent = t.path.parent();
             let Some(parent) = parent else { continue }; // root-level handled as Singles later
             let comps: Vec<_> = parent.components().collect();
-            if comps.is_empty() { continue; }
+            if comps.is_empty() {
+                continue;
+            }
             let key = if album_depth == 0 {
                 parent.to_string_lossy().to_string()
             } else {
@@ -88,7 +90,9 @@ impl Library {
                     .collect();
                 parts.join("/")
             };
-            if key.is_empty() { continue; }
+            if key.is_empty() {
+                continue;
+            }
             by_album.entry(key).or_default().push(t.clone());
         }
         let mut albums: Vec<Album> = by_album
@@ -111,7 +115,10 @@ impl Library {
             if albums.iter().any(|a| a.name == singles_name) {
                 singles_name = "Singles (root)".to_string();
             }
-            albums.push(Album { name: singles_name, tracks: singles_sorted });
+            albums.push(Album {
+                name: singles_name,
+                tracks: singles_sorted,
+            });
         }
 
         albums.sort_by(|a, b| a.name.cmp(&b.name));

@@ -10,11 +10,19 @@ pub fn parse_album_name(mut name: String) -> Result<String, InputError> {
     if let Ok(decoded) = urlencoding::decode(&name) {
         name = decoded.into_owned();
     }
-    if name.is_empty() || name.contains('\0') { return Err(InputError::Invalid); }
+    if name.is_empty() || name.contains('\0') {
+        return Err(InputError::Invalid);
+    }
     for seg in name.split('/') {
-        if seg.is_empty() || seg == "." || seg == ".." { return Err(InputError::Invalid); }
-        if seg.starts_with('.') || seg.starts_with("._") { return Err(InputError::Invalid); }
-        if seg.contains('\\') { return Err(InputError::Invalid); }
+        if seg.is_empty() || seg == "." || seg == ".." {
+            return Err(InputError::Invalid);
+        }
+        if seg.starts_with('.') || seg.starts_with("._") {
+            return Err(InputError::Invalid);
+        }
+        if seg.contains('\\') {
+            return Err(InputError::Invalid);
+        }
     }
     Ok(name)
 }

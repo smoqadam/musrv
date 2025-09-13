@@ -48,7 +48,11 @@ async fn main() -> anyhow::Result<()> {
     fmt().with_env_filter(filter).init();
     match cli.command {
         Commands::Serve {
-            path, port, bind, album_depth, ..
+            path,
+            port,
+            bind,
+            album_depth,
+            ..
         } => {
             if !Path::new(&path).exists() {
                 anyhow::bail!("path does not exist: {}", path.display());

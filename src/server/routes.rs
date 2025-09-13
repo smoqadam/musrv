@@ -166,12 +166,12 @@ async fn admin_rescan(State(state): State<AppState>) -> impl axum::response::Int
             return (
                 [
                     (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
-                        (header::CACHE_CONTROL, "no-cache"),
-                    ],
-                    String::from("error"),
-                );
-            }
-        };
+                    (header::CACHE_CONTROL, "no-cache"),
+                ],
+                String::from("error"),
+            );
+        }
+    };
     state.lib.store(Arc::new(new_lib));
     (
         [
