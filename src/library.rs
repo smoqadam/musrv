@@ -24,4 +24,8 @@ impl Library {
         }
         Library { path, files }
     }
+
+    pub fn files(&self) -> &[PathBuf] {
+        &self.files
+    }
 }
