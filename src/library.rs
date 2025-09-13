@@ -87,6 +87,22 @@ impl Library {
                 Album { name, tracks: ts }
             })
             .collect();
+
+        let singles: Vec<Track> = tracks
+            .iter()
+            .filter(|t| t.path.components().count() == 1)
+            .cloned()
+            .collect();
+        if !singles.is_empty() {
+            let mut singles_sorted = singles;
+            singles_sorted.sort_by(|a, b| a.path.cmp(&b.path));
+            let mut singles_name = "Singles".to_string();
+            if albums.iter().any(|a| a.name == singles_name) {
+                singles_name = "Singles (root)".to_string();
+            }
+            albums.push(Album { name: singles_name, tracks: singles_sorted });
+        }
+
         albums.sort_by(|a, b| a.name.cmp(&b.name));
 
         tracks.sort_by(|a, b| a.path.cmp(&b.path));
