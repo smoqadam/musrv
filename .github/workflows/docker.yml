@@ -108,12 +108,13 @@ jobs:
         run: |
           mv dist/musrv-${{ matrix.target }} dist/musrv
           chmod +x dist/musrv
+      - name: Copy Dockerfile into context
+        run: cp Dockerfile dist/Dockerfile
 
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: dist
-          file: ../Dockerfile
           build-args: |
             MUSRV_BIN=musrv
           platforms: ${{ matrix.platform }}
