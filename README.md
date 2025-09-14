@@ -5,8 +5,10 @@ Minimal, zero-config music server
 ## Get started
 
 ```sh
+# install
 $ curl -fsSL https://raw.githubusercontent.com/smoqadam/musrv/main/install.sh | sh
 
+# run
 $ musrv serve /Users/saeed/Downloads --bind 0.0.0.0 --port 8089 --qr
 root: /Users/saeed/Downloads
 listen: http://192.168.178.33:8089
@@ -69,16 +71,22 @@ It simply turns your local music directory into a streaming server—fast, clean
   git clone https://github.com/smoqadam/musrv && cd musrv
   cargo install --path .
   ```
+
 * Docker:
 
   ```sh
-  docker run --rm -p 8080:8080 -v /music:/music \
-    ghcr.io/smoqadam/musrv:latest-amd64 serve /music
+  
+  docker run --rm -p 8030:8080 -d -v /my/music/library:/music \
+       ghcr.io/smoqadam/musrv:latest-amd64 serve /music --bind 0.0.0.0
 
-  # Raspberry Pi
-  docker run --rm -p 8080:8080 -v /music:/music \
-    ghcr.io/smoqadam/musrv:latest-armv7 serve /music
+
+  # arm
+  docker run --rm -p 8030:8080 -d -v /my/music/library:/music \
+       ghcr.io/smoqadam/musrv:latest-armv7 serve /music --bind 0.0.0.0
+
   ```
+
+Then open http://localhost:8030.
 
 ---
 
