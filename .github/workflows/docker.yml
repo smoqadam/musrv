@@ -1,19 +1,87 @@
-name: Docker
+name: Build Binaries + Docker
 
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*.*.*' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  build-linux-binaries:
+    name: Build Linux Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            build-tool: cargo
+          - target: armv7-unknown-linux-gnueabihf
+            build-tool: cross
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/setup-cross-toolchain-action@v1
+        if: ${{ matrix.build-tool == 'cross' }}
+        with:
+          target: ${{ matrix.target }}
+      - name: Build
+        run: |
+          if [ "${{ matrix.build-tool }}" = "cross" ]; then
+            cargo install cross --locked
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/musrv dist/musrv-${{ matrix.target }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: musrv-${{ matrix.target }}
+          path: dist/musrv-${{ matrix.target }}
+
+  build-macos-binary:
+    name: Build macOS ARM Binary
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - name: Build
+        run: cargo build --release --target aarch64-apple-darwin
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/aarch64-apple-darwin/release/musrv dist/musrv-aarch64-apple-darwin
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: musrv-aarch64-apple-darwin
+          path: dist/musrv-aarch64-apple-darwin
+
   docker:
+    needs: [build-linux-binaries]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            target: x86_64-unknown-linux-gnu
+            platform: linux/amd64
+          - arch: armv7
+            target: armv7-unknown-linux-gnueabihf
+            platform: linux/arm/v7
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,23 +99,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
         with:
-          images: ghcr.io/smoqadam/musrv
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha
+          name: musrv-${{ matrix.target }}
+          path: dist
+      - name: Prepare binary
+        run: |
+          mv dist/musrv-${{ matrix.target }} dist/musrv
+          chmod +x dist/musrv
 
-      - name: Build and push
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          context: dist
+          file: ../Dockerfile
+          build-args: |
+            MUSRV_BIN=musrv
+          platforms: ${{ matrix.platform }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
+          tags: |
+            ghcr.io/smoqadam/musrv:${{ github.ref_name }}-${{ matrix.arch }}
+            ghcr.io/smoqadam/musrv:latest-${{ matrix.arch }}

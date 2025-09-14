@@ -34,7 +34,7 @@ scan to open UI:
 
 ```
 
-Open [http://localhost:8080/](http://localhost:8080/) in your browser.
+Open [http://localhost:8080/](http://localhost:8080/) (or the printed LAN URL) in your browser.
 
 ---
 
@@ -76,7 +76,11 @@ It simply turns your local music directory into a streaming server—fast, clean
 
   ```sh
   docker run --rm -p 8080:8080 -v /music:/music \
-    ghcr.io/smoqadam/musrv:latest serve /music
+    ghcr.io/smoqadam/musrv:latest-amd64 serve /music
+
+  # Raspberry Pi
+  docker run --rm -p 8080:8080 -v /music:/music \
+    ghcr.io/smoqadam/musrv:latest-armv7 serve /music
   ```
 
 ---
