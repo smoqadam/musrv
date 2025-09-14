@@ -7,12 +7,11 @@ Minimal, zero-config music server
 ```sh
 $ curl -fsSL https://raw.githubusercontent.com/smoqadam/musrv/main/install.sh | sh
 
-$ musrv serve /Users/saeed/Downloads --bind 0.0.0.0 --port 8089 --album-depth 5 --qr
+$ musrv serve /Users/saeed/Downloads --bind 0.0.0.0 --port 8089 --qr
 root: /Users/saeed/Downloads
 listen: http://192.168.178.33:8089
-tracks: 101 | albums: 11
+tracks: 101
 ui: http://192.168.178.33:8089
-library.m3u8: http://192.168.178.33:8089/library.m3u8
 
 scan to open UI:
 
@@ -40,15 +39,13 @@ Open [http://localhost:8080/](http://localhost:8080/) (or the printed LAN URL) i
 
 ## What you get
 
-<img width="300" height="1490" alt="Screenshot" src="https://github.com/user-attachments/assets/2f384f12-61f8-4c6c-9b00-128092ade823" />
+<img width="1053" height="1674" alt="image" src="https://github.com/user-attachments/assets/842118c9-7057-4633-8f9b-9ee11a462b09" />
 
-* Lightweight web UI with albums and a simple player
+
+* Lightweight web UI with folders and a simple player
 * Auto-scan of folders for audio (`mp3`, `flac`, `m4a`, `ogg`, `opus`, …)
 * Generates M3U8 playlists you can feed into players such as **Apple Music, VLC, foobar2000**, and others:
-     - Whole library: `http://localhost<LAN-IP>:8080/library.m3u8`
-     - Per-album: `http://localhost:8080/album/<FolderName>.m3u8`
-
-Albums are grouped by folder; root-level files are collected under **Singles**.
+     - Per-folder: `http://localhost:8080/api/folder.m3u8?path=<Folder/Path>`
 
 ---
 
@@ -87,11 +84,6 @@ It simply turns your local music directory into a streaming server—fast, clean
 
 ## Advanced usage
 
-* Album depth (default 1):
-
-  * Full parent path: `--album-depth 0`
-  * First N components: `--album-depth N`
-* JSON endpoint: `/library.json`
 * Rescan: `GET /admin/rescan`
 
 ---

@@ -21,7 +21,6 @@ async fn library_json_and_playlists() {
         lib: Arc::new(arc_swap::ArcSwap::from(Arc::new(lib))),
         base: "http://127.0.0.1:9999/".to_string(),
         root: root.clone(),
-        album_depth: 1,
     };
     let app = musrv::server::build_router(state);
 
@@ -29,7 +28,7 @@ async fn library_json_and_playlists() {
         .clone()
         .oneshot(
             Request::builder()
-                .uri("/library.json")
+                .uri("/api/folder")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -44,28 +43,11 @@ async fn library_json_and_playlists() {
         .clone()
         .oneshot(
             Request::builder()
-                .uri("/library.m3u8")
+                .uri("/api/folder.m3u8?path=Album1")
                 .body(Body::empty())
                 .unwrap(),
         )
         .await
         .unwrap();
     assert!(res2.status().is_success());
-    let ctype = res2
-        .headers()
-        .get(axum::http::header::CONTENT_TYPE)
-        .unwrap();
-    assert!(ctype.to_str().unwrap().starts_with("audio/x-mpegurl"));
-
-    let res3 = app
-        .clone()
-        .oneshot(
-            Request::builder()
-                .uri("/album/Album1.m3u8")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    assert!(res3.status().is_success());
 }

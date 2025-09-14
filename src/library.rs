@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
@@ -10,27 +10,22 @@ pub struct Track {
     pub size: Option<u64>,
 }
 
-#[derive(Clone, Debug)]
-pub struct Album {
-    pub name: String,
-    pub tracks: Vec<Track>,
-}
-
 #[derive(Debug)]
 pub struct Library {
     #[allow(dead_code)]
     root: PathBuf,
     tracks: Vec<Track>,
-    albums: Vec<Album>,
+    folders: HashMap<String, FolderEntry>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct FolderEntry {
+    pub subfolders: BTreeSet<String>,
+    pub tracks: Vec<Track>,
 }
 
 impl Library {
-    #[allow(dead_code)]
     pub fn scan(root: PathBuf) -> Self {
-        Self::scan_with_depth(root, 1)
-    }
-
-    pub fn scan_with_depth(root: PathBuf, album_depth: usize) -> Self {
         let mut tracks = Vec::new();
         let iter = WalkDir::new(root.clone())
             .follow_links(false)
@@ -71,64 +66,53 @@ impl Library {
             }
         }
 
-        let mut by_album: HashMap<String, Vec<Track>> = HashMap::new();
+        let mut folders: HashMap<String, FolderEntry> = HashMap::new();
+        folders.entry(String::new()).or_default();
         for t in &tracks {
-            let parent = t.path.parent();
-            let Some(parent) = parent else { continue }; // root-level handled as Singles later
-            let comps: Vec<_> = parent.components().collect();
-            if comps.is_empty() {
-                continue;
-            }
-            let key = if album_depth == 0 {
-                parent.to_string_lossy().to_string()
-            } else {
-                let take = comps.len().min(album_depth);
-                let parts: Vec<String> = comps
-                    .iter()
-                    .take(take)
-                    .map(|c| c.as_os_str().to_string_lossy().to_string())
-                    .collect();
-                parts.join("/")
-            };
-            if key.is_empty() {
-                continue;
-            }
-            by_album.entry(key).or_default().push(t.clone());
-        }
-        let mut albums: Vec<Album> = by_album
-            .into_iter()
-            .map(|(name, mut ts)| {
-                ts.sort_by(|a, b| a.path.cmp(&b.path));
-                Album { name, tracks: ts }
-            })
-            .collect();
+            // Folder tree population
+            match t.path.parent() {
+                None => {
+                    folders
+                        .entry(String::new())
+                        .or_default()
+                        .tracks
+                        .push(t.clone());
+                }
+                Some(parent) => {
+                    let rel_parent = parent.to_string_lossy().to_string();
+                    folders
+                        .entry(rel_parent.clone())
+                        .or_default()
+                        .tracks
+                        .push(t.clone());
 
-        let singles: Vec<Track> = tracks
-            .iter()
-            .filter(|t| t.path.components().count() == 1)
-            .cloned()
-            .collect();
-        if !singles.is_empty() {
-            let mut singles_sorted = singles;
-            singles_sorted.sort_by(|a, b| a.path.cmp(&b.path));
-            let mut singles_name = "Singles".to_string();
-            if albums.iter().any(|a| a.name == singles_name) {
-                singles_name = "Singles (root)".to_string();
+                    // Build chain of subfolder links from root to this parent
+                    let parts: Vec<String> = parent
+                        .components()
+                        .map(|c| c.as_os_str().to_string_lossy().to_string())
+                        .collect();
+                    let mut prev = String::new();
+                    for i in 0..parts.len() {
+                        let current = parts[0..=i].join("/");
+                        folders.entry(current.clone()).or_default();
+                        // link prev -> current
+                        folders
+                            .entry(prev.clone())
+                            .or_default()
+                            .subfolders
+                            .insert(current.clone());
+                        prev = current;
+                    }
+                }
             }
-            albums.push(Album {
-                name: singles_name,
-                tracks: singles_sorted,
-            });
         }
-
-        albums.sort_by(|a, b| a.name.cmp(&b.name));
 
         tracks.sort_by(|a, b| a.path.cmp(&b.path));
 
         Library {
             root,
             tracks,
-            albums,
+            folders,
         }
     }
 
@@ -139,11 +123,24 @@ impl Library {
     pub fn tracks(&self) -> &[Track] {
         &self.tracks
     }
-    pub fn albums(&self) -> &[Album] {
-        &self.albums
+
+    pub fn folder(&self, rel: &str) -> Option<&FolderEntry> {
+        self.folders.get(rel)
     }
-    pub fn album_by_name(&self, name: &str) -> Option<&Album> {
-        self.albums.iter().find(|a| a.name == name)
+
+    pub fn collect_tracks_recursive(&self, rel: &str) -> Vec<Track> {
+        let mut v = Vec::new();
+        self.collect_tracks_recursive_inner(rel, &mut v);
+        v
+    }
+
+    fn collect_tracks_recursive_inner(&self, rel: &str, out: &mut Vec<Track>) {
+        if let Some(entry) = self.folders.get(rel) {
+            out.extend(entry.tracks.clone());
+            for child in &entry.subfolders {
+                self.collect_tracks_recursive_inner(child, out);
+            }
+        }
     }
 }
 

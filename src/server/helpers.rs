@@ -3,6 +3,7 @@ pub enum InputError {
     Invalid,
 }
 
+#[allow(dead_code)]
 pub fn parse_album_name(mut name: String) -> Result<String, InputError> {
     if let Some(stripped) = name.strip_suffix(".m3u8") {
         name = stripped.to_string();

@@ -42,14 +42,6 @@ enum Commands {
         #[arg(long, value_name = "IP")]
         bind: Option<IpAddr>,
 
-        /// Reserved for future ignore rules
-        #[arg(long, hide = false)]
-        gitignore: bool,
-
-        /// Album grouping depth (0 = full parent path, 1 = top folder)
-        #[arg(long, value_name = "N", value_parser = clap::value_parser!(usize))]
-        album_depth: Option<usize>,
-
         /// Print a QR code for the UI URL
         #[arg(long)]
         qr: bool,
@@ -71,9 +63,7 @@ async fn main() -> anyhow::Result<()> {
             path,
             port,
             bind,
-            album_depth,
             qr,
-            ..
         } => {
             if !Path::new(&path).exists() {
                 anyhow::bail!("path does not exist: {}", path.display());
@@ -85,8 +75,7 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::bail!("path is not a directory: {}", path.display());
             }
             let root = std::fs::canonicalize(&path).unwrap_or(path);
-            let depth = album_depth.unwrap_or(1);
-            let lib = Arc::new(library::Library::scan_with_depth(root.clone(), depth));
+            let lib = Arc::new(library::Library::scan(root.clone()));
             let bind = bind.unwrap_or_else(|| "127.0.0.1".parse().unwrap());
             let port = port.unwrap_or(8080);
             let display_host = if bind.is_unspecified() {
@@ -103,19 +92,13 @@ async fn main() -> anyhow::Result<()> {
                 lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
                 base: base.clone(),
                 root: root.clone(),
-                album_depth: depth,
             };
             let app: Router = server::build_router(state);
             let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
             println!("listen: {}", &base.trim_end_matches('/'));
-            println!(
-                "tracks: {} | albums: {}",
-                lib.tracks().len(),
-                lib.albums().len()
-            );
+            println!("tracks: {}", lib.tracks().len());
             println!("ui: {}", base.trim_end_matches('/'));
-            println!("library.m3u8: {base}library.m3u8");
             if qr {
                 let ui_url = base.trim_end_matches('/');
                 if let Ok(code) = qrcode::QrCode::new(ui_url.as_bytes()) {
