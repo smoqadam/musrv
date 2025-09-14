@@ -33,6 +33,8 @@ enum Commands {
         gitignore: bool,
         #[arg(long, value_parser = clap::value_parser!(usize))]
         album_depth: Option<usize>,
+        #[arg(long)]
+        qr: bool,
     },
 }
 
@@ -52,6 +54,7 @@ async fn main() -> anyhow::Result<()> {
             port,
             bind,
             album_depth,
+            qr,
             ..
         } => {
             if !Path::new(&path).exists() {
@@ -88,13 +91,21 @@ async fn main() -> anyhow::Result<()> {
             let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
             println!("listen: {}", &base.trim_end_matches('/'));
-            println!("files: {}", lib.tracks().len());
-            for a in lib.albums() {
-                let enc = playlist::encode_path(&a.name);
-                println!("album: {base}album/{enc}.m3u8");
-            }
-            println!("playlist: {base}library.m3u8");
+            println!(
+                "tracks: {} | albums: {}",
+                lib.tracks().len(),
+                lib.albums().len()
+            );
             println!("ui: {}", base.trim_end_matches('/'));
+            println!("library.m3u8: {base}library.m3u8");
+            if qr {
+                let ui_url = base.trim_end_matches('/');
+                if let Ok(code) = qrcode::QrCode::new(ui_url.as_bytes()) {
+                    use qrcode::render::unicode;
+                    let qr_art = code.render::<unicode::Dense1x2>().quiet_zone(true).build();
+                    println!("\nscan to open UI:\n{qr_art}");
+                }
+            }
             let listener = tokio::net::TcpListener::bind(addr).await?;
             axum::serve(listener, app).await?;
         }

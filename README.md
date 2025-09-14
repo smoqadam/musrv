@@ -5,8 +5,33 @@ Minimal, zero-config music server
 ## Get started
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/smoqadam/musrv/main/install.sh | sh
-musrv serve /path/to/music
+$ curl -fsSL https://raw.githubusercontent.com/smoqadam/musrv/main/install.sh | sh
+
+$ musrv serve /Users/saeed/Downloads --bind 0.0.0.0 --port 8089 --album-depth 5 --qr
+root: /Users/saeed/Downloads
+listen: http://192.168.178.33:8089
+tracks: 101 | albums: 11
+ui: http://192.168.178.33:8089
+library.m3u8: http://192.168.178.33:8089/library.m3u8
+
+scan to open UI:
+
+
+    █▀▀▀▀▀█ █▀▀██▄▄ █ █▀▀▀▀▀█
+    █ ███ █ ▀██  █▄   █ ███ █
+    █ ▀▀▀ █ ▀█▀▄▄██   █ ▀▀▀ █
+    ▀▀▀▀▀▀▀ ▀ ▀ █▄█ ▀ ▀▀▀▀▀▀▀
+    █  ▀▀▀▀█▀▄███  █▄█  █▄██▀
+     █▀▀ █▀█████ ▀██ █▀▀██▄▄█
+    ██▀▄█▄▀▄ █ ▀█▄▀▄▀▀▀▄▄  ▄▀
+    █▀▄ ▄▀▀██▄█ █  ▀█▀  ▄▀█▀█
+    ▀ ▀▀  ▀▀▄█▀█▄██▄█▀▀▀█ ▀█
+    █▀▀▀▀▀█ █ ▄ █▄█ █ ▀ █▀  ▀
+    █ ███ █ █  ██▀ ▀▀▀██▀█ ██
+    █ ▀▀▀ █  ▄▀▀▄ ▀▄ ▄▄▄█ ███
+    ▀▀▀▀▀▀▀ ▀  ▀ ▀▀▀▀ ▀  ▀  ▀
+
+
 ```
 
 Open [http://localhost:8080/](http://localhost:8080/) in your browser.
