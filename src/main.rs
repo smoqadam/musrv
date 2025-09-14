@@ -12,8 +12,13 @@ use clap::{ArgAction, Parser, Subcommand};
 use tracing_subscriber::{EnvFilter, fmt};
 
 #[derive(Parser)]
-#[command(name = "musrv")]
-#[command(author, version, about)]
+#[command(
+    name = "musrv",
+    author,
+    version,
+    about = "Minimal, zero‑config music server that scans a folder, serves a small web UI, M3U8 playlists and a simple radio stream.",
+    long_about = None
+)]
 struct Cli {
     #[arg(short, long, action = ArgAction::Count, global = true)]
     verbose: u8,
@@ -23,16 +28,29 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Serve a music folder over HTTP
     Serve {
+        /// Root directory to scan and serve
+        #[arg(value_name = "ROOT", value_hint = clap::ValueHint::DirPath)]
         path: PathBuf,
-        #[arg(long)]
+
+        /// TCP port to listen on (default: 8080)
+        #[arg(long, value_name = "PORT")]
         port: Option<u16>,
-        #[arg(long)]
+
+        /// IP address to bind (e.g. 127.0.0.1, 0.0.0.0)
+        #[arg(long, value_name = "IP")]
         bind: Option<IpAddr>,
-        #[arg(long)]
+
+        /// Reserved for future ignore rules
+        #[arg(long, hide = false)]
         gitignore: bool,
-        #[arg(long, value_parser = clap::value_parser!(usize))]
+
+        /// Album grouping depth (0 = full parent path, 1 = top folder)
+        #[arg(long, value_name = "N", value_parser = clap::value_parser!(usize))]
         album_depth: Option<usize>,
+
+        /// Print a QR code for the UI URL
         #[arg(long)]
         qr: bool,
     },
