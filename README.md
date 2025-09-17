@@ -77,12 +77,14 @@ It simply turns your local music directory into a streaming server—fast, clean
   ```sh
   
   docker run --rm -p 8030:8080 -d -v /my/music/library:/music \
-       ghcr.io/smoqadam/musrv:latest-amd64 serve /music --bind 0.0.0.0
+       ghcr.io/smoqadam/musrv:latest-amd64 serve /music --bind 0.0.0.0 \
+       --public-url http://localhost:8030/
 
 
   # arm
   docker run --rm -p 8030:8080 -d -v /my/music/library:/music \
-       ghcr.io/smoqadam/musrv:latest-armv7 serve /music --bind 0.0.0.0
+       ghcr.io/smoqadam/musrv:latest-armv7 serve /music --bind 0.0.0.0 \
+       --public-url http://localhost:8030/
 
   ```
 
@@ -99,7 +101,7 @@ Then open http://localhost:8030.
 ## Notes
 
 * Hidden/system files are ignored; symlinks are not followed.
-* Binding to `0.0.0.0` exposes a LAN URL that’s also used in playlists.
+* Binding to `0.0.0.0` exposes a LAN URL that’s also used in playlists. When running behind Docker or a reverse proxy, pass `--public-url http://your-host:port/` to control the advertised URLs.
 
 ---
 

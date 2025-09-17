@@ -41,7 +41,7 @@ struct FolderQuery {
     path: Option<String>,
 }
 
-use super::types::{JsonFolderAlbum, JsonFolderResp, JsonFolderTrack};
+use super::types::{JsonFolderAlbum, JsonFolderResp};
 
 async fn api_folder(
     Query(q): Query<FolderQuery>,
@@ -59,26 +59,12 @@ async fn api_folder(
         rel.rsplit('/').next().unwrap_or("").to_string()
     };
     let mut albums = Vec::new();
-    let mut tracks = Vec::new();
     if let Some(entry) = state.lib.load().folder(&rel) {
         for child in &entry.subfolders {
             let child_name = child.rsplit('/').next().unwrap_or("").to_string();
             albums.push(JsonFolderAlbum {
                 name: child_name,
                 path: child.clone(),
-            });
-        }
-        for t in &entry.tracks {
-            let tname = t
-                .path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("")
-                .to_string();
-            tracks.push(JsonFolderTrack {
-                name: tname,
-                path: t.path.to_string_lossy().replace('\\', "/"),
-                size: t.size,
             });
         }
     }
@@ -92,7 +78,6 @@ async fn api_folder(
         path: rel,
         m3u8,
         albums,
-        tracks,
     };
     Json(body)
 }

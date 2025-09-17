@@ -42,6 +42,10 @@ enum Commands {
         #[arg(long, value_name = "IP")]
         bind: Option<IpAddr>,
 
+        /// Public URL to advertise in generated playlists (defaults to detected LAN IP)
+        #[arg(long = "public-url", value_name = "URL")]
+        public_url: Option<String>,
+
         /// Print a QR code for the UI URL
         #[arg(long)]
         qr: bool,
@@ -63,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
             path,
             port,
             bind,
+            public_url,
             qr,
         } => {
             if !Path::new(&path).exists() {
@@ -78,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
             let lib = Arc::new(library::Library::scan(root.clone()));
             let bind = bind.unwrap_or_else(|| "127.0.0.1".parse().unwrap());
             let port = port.unwrap_or(8080);
-            let display_host = if bind.is_unspecified() {
+            let default_host = if bind.is_unspecified() {
                 match local_ip_address::local_ip() {
                     Ok(std::net::IpAddr::V4(v4)) => v4.to_string(),
                     Ok(ip) => ip.to_string(),
@@ -87,7 +92,11 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 bind.to_string()
             };
-            let base = format!("http://{display_host}:{port}/");
+            let base = match public_url {
+                Some(provided) => normalize_base(&provided),
+                None => format!("http://{default_host}:{port}/"),
+            };
+            let listen_addr = format!("http://{}:{}/", bind, port);
             let state = server::AppState {
                 lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
                 base: base.clone(),
@@ -96,7 +105,7 @@ async fn main() -> anyhow::Result<()> {
             let app: Router = server::build_router(state);
             let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
-            println!("listen: {}", &base.trim_end_matches('/'));
+            println!("listen: {}", listen_addr.trim_end_matches('/'));
             println!("tracks: {}", lib.tracks().len());
             println!("ui: {}", base.trim_end_matches('/'));
             if qr {
@@ -112,4 +121,17 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn normalize_base(input: &str) -> String {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return String::from("http://localhost/");
+    }
+    let with_scheme = if trimmed.contains("://") {
+        trimmed.to_string()
+    } else {
+        format!("http://{}", trimmed)
+    };
+    format!("{}/", with_scheme.trim_end_matches('/'))
 }

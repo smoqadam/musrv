@@ -24,7 +24,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 60px 40px;
         }
@@ -39,7 +39,7 @@
         }
         
         .logo {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 200;
             color: #ffffff;
             margin-bottom: 8px;
@@ -47,7 +47,7 @@
         }
         
         .tagline {
-            font-size: 11px;
+            font-size: 13px;
             color: #666666;
             font-weight: 300;
             letter-spacing: 1px;
@@ -64,8 +64,8 @@
             background: #2a2a2a;
             color: #aaaaaa;
             border: 1px solid #333333;
-            padding: 6px 12px;
-            font-size: 10px;
+            padding: 8px 16px;
+            font-size: 12px;
             font-weight: 300;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -81,20 +81,20 @@
         .player-section {
             background: #222222;
             border: 1px solid #333333;
-            padding: 20px;
+            padding: 24px;
             margin-bottom: 20px;
-            min-height: 120px;
+            min-height: 140px;
         }
         
         .now-playing {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
         
         .track-title {
-            font-size: 13px;
+            font-size: 16px;
             color: #ffffff;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 300;
             white-space: nowrap;
             overflow: hidden;
@@ -102,16 +102,16 @@
         }
         
         .track-info {
-            font-size: 10px;
+            font-size: 12px;
             color: #666666;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
         
         .progress-bar {
             width: 100%;
-            height: 2px;
+            height: 3px;
             background: #333333;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             position: relative;
             cursor: pointer;
         }
@@ -127,20 +127,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
         
         .control-btn {
             background: #2a2a2a;
             color: #aaaaaa;
             border: 1px solid #333333;
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.2s ease;
         }
         
@@ -150,9 +150,45 @@
         }
         
         .control-btn.play-pause {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
+            font-size: 16px;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        
+        .volume-icon {
             font-size: 14px;
+            color: #aaaaaa;
+        }
+        
+        .volume-slider {
+            width: 100px;
+            height: 3px;
+            background: #333333;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #666666;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #666666;
+            cursor: pointer;
+            border: none;
         }
         
         .playlist-section {
@@ -165,23 +201,15 @@
         }
         
         .playlist-header {
-            padding: 12px 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid #333333;
             background: #252525;
         }
-        .volume-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .volume-slider {
-            width: 120px;
-        }
         
         .breadcrumb {
-            font-size: 10px;
+            font-size: 12px;
             color: #666666;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         
         .breadcrumb a {
@@ -195,22 +223,30 @@
         
         .playlist-controls {
             display: flex;
-            gap: 8px;
+            gap: 10px;
         }
         
         .playlist-btn {
             background: #2a2a2a;
             color: #aaaaaa;
             border: 1px solid #333333;
-            padding: 4px 8px;
-            font-size: 9px;
+            padding: 6px 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .playlist-btn:hover {
             background: #333333;
             color: #ffffff;
+        }
+        
+        .playlist-btn.copied {
+            background: #2d5a2d;
+            color: #90ee90;
         }
         
         .playlist-content {
@@ -237,7 +273,7 @@
         }
         
         .folder {
-            padding: 8px 16px;
+            padding: 12px 20px;
             cursor: pointer;
             border-bottom: 1px solid #2a2a2a;
             transition: background 0.1s ease;
@@ -248,7 +284,7 @@
         }
         
         .folder-name {
-            font-size: 11px;
+            font-size: 13px;
             color: #bbbbbb;
             font-weight: 300;
         }
@@ -257,7 +293,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 16px;
+            padding: 10px 20px;
             cursor: pointer;
             border-bottom: 1px solid #2a2a2a;
             transition: background 0.1s ease;
@@ -273,7 +309,7 @@
         }
         
         .track-name {
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 300;
             flex: 1;
             white-space: nowrap;
@@ -283,7 +319,7 @@
         }
         
         .track-size {
-            font-size: 9px;
+            font-size: 11px;
             color: #666666;
             font-weight: 300;
         }
@@ -291,7 +327,7 @@
         .loading, .error {
             padding: 40px;
             text-align: center;
-            font-size: 11px;
+            font-size: 13px;
             color: #666666;
         }
         
@@ -309,19 +345,25 @@
             }
             
             .player-controls {
-                gap: 10px;
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .volume-control {
+                margin-left: 0;
+                margin-top: 10px;
             }
             
             .control-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 10px;
-            }
-            
-            .control-btn.play-pause {
                 width: 36px;
                 height: 36px;
                 font-size: 12px;
+            }
+            
+            .control-btn.play-pause {
+                width: 44px;
+                height: 44px;
+                font-size: 14px;
             }
         }
     </style>
@@ -353,18 +395,20 @@
                 <button class="control-btn" onclick="previousTrack()">⏮</button>
                 <button class="control-btn play-pause" onclick="togglePlayback()" id="play-pause-btn">▶</button>
                 <button class="control-btn" onclick="nextTrack()">⏭</button>
-                <button class="control-btn" onclick="shufflePlaylist()">⤮</button>
+                <div class="volume-control">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.1" value="1">
+                </div>
             </div>
         </div>
         
         <div class="playlist-section">
             <div class="playlist-header">
                 <div class="breadcrumb" id="breadcrumb">home</div>
-                <div class="playlist-controls" id="playlist-controls" style="display: none;">
+                <div class="playlist-controls" id="playlist-controls">
                     <button class="playlist-btn" onclick="goBack()">back</button>
                     <button class="playlist-btn" onclick="playPlaylist()">play all</button>
-                    <button class="playlist-btn" onclick="shuffleAndPlay()">shuffle all</button>
-                    <button class="playlist-btn" onclick="copyM3U8()">copy m3u8 url</button>
+                    <button class="playlist-btn" id="copy-btn" onclick="copyM3U8()">📋 copy m3u8</button>
                 </div>
             </div>
             
@@ -378,158 +422,206 @@
 
     <script>
         const API_BASE = '/api';
+        const audio = document.getElementById('audio');
+
         let currentPath = '';
+        let currentAlbums = [];
         let currentPlaylist = [];
+        let currentDisplayTracks = [];
         let currentTrackIndex = -1;
-        let audio = document.getElementById('audio');
-        let isShuffled = false;
-        let originalPlaylist = [];
         let currentM3U8 = '';
+        let playlistFetchToken = 0;
+        let tracksLoading = false;
+        let tracksError = '';
+
         const volumeSlider = document.getElementById('volume-slider');
-        if (volumeSlider) {
-            volumeSlider.value = String(audio.volume || 1);
-            volumeSlider.addEventListener('input', (e) => {
-                audio.volume = parseFloat(e.target.value);
-            });
-        }
-        
-        // Load folder content
+        volumeSlider.value = String(audio.volume || 1);
+        volumeSlider.addEventListener('input', (e) => {
+            audio.volume = parseFloat(e.target.value);
+        });
+
         async function loadFolder(path = '') {
             try {
                 document.getElementById('playlist-content').innerHTML = '<div class="loading">loading music library...</div>';
-                
                 const url = path ? `${API_BASE}/folder?path=${encodeURIComponent(path)}` : `${API_BASE}/folder`;
                 const response = await fetch(url);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 const data = await response.json();
+                console.log('API Response:', data);
                 currentPath = path;
-                renderFolder(data);
+                await renderFolder(data);
             } catch (error) {
                 document.getElementById('playlist-content').innerHTML = `<div class="error">error loading folder: ${error.message}</div>`;
             }
         }
-        
-        // Render folder content
-        function renderFolder(data) {
-            const content = document.getElementById('playlist-content');
-            let html = '';
-            
-            // Breadcrumb
+
+        async function renderFolder(data) {
+            currentAlbums = Array.isArray(data.albums) ? data.albums : [];
+            currentPlaylist = [];
+            currentTrackIndex = -1;
+            currentDisplayTracks = [];
+            tracksLoading = false;
+            tracksError = '';
+            updatePlayerInfo();
+
+            updateBreadcrumb();
+            updatePlaylistContent();
+
+            if (typeof data.m3u8 === 'string' && data.m3u8.length > 0) {
+                currentM3U8 = data.m3u8;
+                await loadTracksFromM3U8(true);
+            } else {
+                currentM3U8 = '';
+                updatePlaylistContent();
+            }
+        }
+
+        function updateBreadcrumb() {
             const breadcrumb = document.getElementById('breadcrumb');
-            const pathParts = currentPath.split('/').filter(p => p);
+            const pathParts = currentPath.split('/').filter(Boolean);
             let breadcrumbHtml = '<a href="#" onclick="loadFolder(\'\')">home</a>';
-            
             let currentBreadcrumbPath = '';
             for (const part of pathParts) {
                 currentBreadcrumbPath += (currentBreadcrumbPath ? '/' : '') + part;
-                breadcrumbHtml += ` / <a href="#" onclick="loadFolder('${currentBreadcrumbPath}')">${part}</a>`;
+                const escapedPath = escapeJsString(currentBreadcrumbPath);
+                breadcrumbHtml += ` / <a href="#" onclick="loadFolder('${escapedPath}')">${escapeHtml(part)}</a>`;
             }
             breadcrumb.innerHTML = breadcrumbHtml;
-            
-            // Show/hide playlist controls
-            const playlistControls = document.getElementById('playlist-controls');
-            if (data.tracks && data.tracks.length > 0) {
-                playlistControls.style.display = 'flex';
-            } else {
-                playlistControls.style.display = 'none';
-            }
-            currentM3U8 = data.m3u8 || '';
-            
-            // Albums/Folders
-            if (data.albums) {
-                for (const album of data.albums) {
-                    html += `
-                        <div class="folder" onclick="loadFolder('${album.path}')">
-                            <div class="folder-name">📁 ${album.name}</div>
-                        </div>
-                    `;
+        }
+
+        function escapeHtml(value) {
+            const safe = String(value);
+            return safe.replace(/[&<>"']/g, (char) => {
+                switch (char) {
+                    case '&':
+                        return '&amp;';
+                    case '<':
+                        return '&lt;';
+                    case '>':
+                        return '&gt;';
+                    case '"':
+                        return '&quot;';
+                    case '\'':
+                        return '&#39;';
+                    default:
+                        return char;
                 }
+            });
+        }
+
+        function escapeJsString(value) {
+            return String(value)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
+        function updatePlaylistContent() {
+            const content = document.getElementById('playlist-content');
+            let html = '';
+
+            if (currentAlbums.length > 0) {
+                html += currentAlbums
+                    .map((album) => {
+                        const escapedPath = escapeJsString(album.path);
+                        return `<div class="folder" onclick="loadFolder('${escapedPath}')"><div class="folder-name">📁 ${escapeHtml(album.name)}</div></div>`;
+                    })
+                    .join('');
             }
-            
-            // Tracks
-            if (data.tracks) {
-                for (let i = 0; i < data.tracks.length; i++) {
-                    const track = data.tracks[i];
-                    const sizeKB = Math.round(track.size / 1024);
-                    html += `
-                        <div class="track" id="track-${i}" onclick="playTrack(${i})">
-                            <div class="track-name">${track.name}</div>
-                            <div class="track-size">${sizeKB}kb</div>
-                        </div>
-                    `;
-                }
-                
-                // Store current tracks for playlist functionality
-                currentPlaylist = data.tracks.map(track => ({
-                    ...track,
-                    url: `${API_BASE.replace('/api', '')}/${encodeURIComponent(track.path)}`
-                }));
-                originalPlaylist = [...currentPlaylist];
-                isShuffled = false;
+
+            if (tracksLoading) {
+                html += '<div class="loading">loading tracks...</div>';
+            } else if (tracksError) {
+                html += `<div class="error">${escapeHtml(tracksError)}</div>`;
+            } else if (currentDisplayTracks.length > 0) {
+                html += currentDisplayTracks
+                    .map((track) => {
+                        const isPlaying = track.playlistIndex === currentTrackIndex;
+                        return `<div class="track${isPlaying ? ' playing' : ''}" id="track-${track.playlistIndex}" onclick="playTrack(${track.playlistIndex})"><div class="track-name">${escapeHtml(track.name)}</div></div>`;
+                    })
+                    .join('');
             }
-            
+
             if (!html) {
                 html = '<div class="loading">no items found</div>';
             }
-            
+
             content.innerHTML = html;
         }
-        
-        // Play specific track
+
+        async function loadTracksFromM3U8(force = false) {
+            if (!currentM3U8) {
+                currentPlaylist = [];
+                currentDisplayTracks = [];
+                tracksLoading = false;
+                tracksError = '';
+                updatePlaylistContent();
+                return currentPlaylist;
+            }
+            if (!force && currentPlaylist.length > 0) {
+                return currentPlaylist;
+            }
+
+            const token = ++playlistFetchToken;
+            try {
+                tracksLoading = true;
+                tracksError = '';
+                updatePlaylistContent();
+
+                const tracks = await parseM3U8(currentM3U8);
+                if (token !== playlistFetchToken) {
+                    return currentPlaylist;
+                }
+
+                currentPlaylist = tracks;
+                currentDisplayTracks = computeDisplayTracks(tracks);
+                tracksLoading = false;
+                tracksError = tracks.length === 0 ? 'No tracks found in playlist' : '';
+                updatePlaylistContent();
+                return currentPlaylist;
+            } catch (error) {
+                if (token !== playlistFetchToken) {
+                    return currentPlaylist;
+                }
+                tracksLoading = false;
+                tracksError = 'error loading playlist';
+                currentPlaylist = [];
+                currentDisplayTracks = [];
+                console.error('Error loading playlist:', error);
+                updatePlaylistContent();
+                return currentPlaylist;
+            }
+        }
+
         function playTrack(index) {
-            if (currentPlaylist.length === 0) return;
-            
+            if (currentPlaylist.length === 0) {
+                return;
+            }
+            if (index < 0 || index >= currentPlaylist.length) {
+                return;
+            }
             currentTrackIndex = index;
             const track = currentPlaylist[index];
-            
             audio.src = track.url;
             audio.play();
-            
-            updatePlayerInfo();
+            updatePlayerInfo(track);
             updateTrackHighlight();
         }
-        
-        // Play entire playlist
-        function playPlaylist() {
-            if (currentPlaylist.length === 0) return;
-            if (isShuffled) {
-                currentPlaylist = [...originalPlaylist];
-                isShuffled = false;
-                renderFolder({albums: [], tracks: originalPlaylist});
+
+        async function playPlaylist() {
+            if (!currentM3U8) {
+                alert('Playlist URL not available');
+                return;
+            }
+            const tracks = await loadTracksFromM3U8();
+            if (!tracks.length) {
+                alert('No tracks found in playlist');
+                return;
             }
             playTrack(0);
         }
-        
-        // Shuffle and play playlist
-        function shuffleAndPlay() {
-            if (currentPlaylist.length === 0) return;
-            shufflePlaylist();
-            playTrack(0);
-        }
-        
-        // Shuffle current playlist
-        function shufflePlaylist() {
-            if (currentPlaylist.length === 0) return;
-            
-            if (!isShuffled) {
-                originalPlaylist = [...currentPlaylist];
-            }
-            
-            // Fisher-Yates shuffle
-            for (let i = currentPlaylist.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [currentPlaylist[i], currentPlaylist[j]] = [currentPlaylist[j], currentPlaylist[i]];
-            }
-            
-            isShuffled = true;
-            renderFolder({albums: [], tracks: currentPlaylist});
-        }
-        
-        // Player controls
+
         function togglePlayback() {
             if (audio.paused) {
                 audio.play();
@@ -537,88 +629,85 @@
                 audio.pause();
             }
         }
-        
+
+        function nextTrack() {
+            if (currentPlaylist.length === 0) {
+                return;
+            }
+            const hasNext = currentTrackIndex < currentPlaylist.length - 1;
+            const nextIndex = hasNext ? currentTrackIndex + 1 : 0;
+            playTrack(nextIndex);
+        }
+
         function previousTrack() {
+            if (currentPlaylist.length === 0) {
+                return;
+            }
             if (currentTrackIndex > 0) {
                 playTrack(currentTrackIndex - 1);
             }
         }
-        
-        function nextTrack() {
-            if (currentTrackIndex < currentPlaylist.length - 1) {
-                playTrack(currentTrackIndex + 1);
-            } else {
-                playTrack(0);
-            }
-        }
-        
+
         function goBack() {
-            if (!currentPath) return;
+            if (!currentPath) {
+                return;
+            }
             const idx = currentPath.lastIndexOf('/');
             const parent = idx >= 0 ? currentPath.slice(0, idx) : '';
             loadFolder(parent);
         }
-        
+
         function seekTo(event) {
-            if (audio.duration) {
-                const rect = event.target.getBoundingClientRect();
-                const percentage = (event.clientX - rect.left) / rect.width;
-                audio.currentTime = percentage * audio.duration;
+            if (!audio.duration) {
+                return;
             }
+            const rect = event.target.getBoundingClientRect();
+            const percentage = (event.clientX - rect.left) / rect.width;
+            audio.currentTime = percentage * audio.duration;
         }
-        
-        function updatePlayerInfo() {
-            if (currentTrackIndex >= 0 && currentPlaylist[currentTrackIndex]) {
-                const track = currentPlaylist[currentTrackIndex];
-                document.getElementById('track-title').textContent = track.name;
-                document.getElementById('track-info').textContent = 
-                    `${currentTrackIndex + 1} of ${currentPlaylist.length}`;
+
+        function updatePlayerInfo(track) {
+            const titleEl = document.getElementById('track-title');
+            const infoEl = document.getElementById('track-info');
+            if (!track) {
+                titleEl.textContent = 'no track selected';
+                infoEl.textContent = 'ready to play';
+                return;
             }
+            titleEl.textContent = track.name;
+            infoEl.textContent = `${currentTrackIndex + 1} of ${currentPlaylist.length} (playlist mode)`;
         }
-        
+
         function updateTrackHighlight() {
-            // Remove previous highlight
-            const playingTracks = document.querySelectorAll('.track.playing');
-            playingTracks.forEach(track => track.classList.remove('playing'));
-            
-            // Add highlight to current track
-            const trackEl = document.getElementById(`track-${currentTrackIndex}`);
-            if (trackEl) {
-                trackEl.classList.add('playing');
-            }
+            updatePlaylistContent();
         }
-        
+
         function updateProgress() {
-            if (audio.duration) {
-                const percentage = (audio.currentTime / audio.duration) * 100;
-                document.getElementById('progress-fill').style.width = percentage + '%';
+            if (!audio.duration) {
+                return;
             }
+            const percentage = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
         }
-        
-        // Audio event listeners
+
         audio.addEventListener('play', () => {
             document.getElementById('play-pause-btn').textContent = '⏸';
         });
-        
         audio.addEventListener('pause', () => {
             document.getElementById('play-pause-btn').textContent = '▶';
         });
-        
         audio.addEventListener('ended', () => {
             nextTrack();
         });
-        
         audio.addEventListener('timeupdate', updateProgress);
-        
-        // Rescan library
+
         async function rescanLibrary() {
-            const btn = document.querySelector('.header-btn:last-child');
-            btn.disabled = true;
-            btn.textContent = 'rescanning...';
-            
+            const buttons = document.querySelectorAll('.header-btn');
+            const rescanBtn = buttons[buttons.length - 1];
+            rescanBtn.disabled = true;
+            rescanBtn.textContent = 'rescanning...';
             try {
                 const response = await fetch(`${API_BASE.replace('/api', '')}/admin/rescan`);
-                
                 if (response.ok) {
                     await loadFolder(currentPath);
                 } else {
@@ -627,26 +716,112 @@
             } catch (error) {
                 alert('error rescanning library: ' + error.message);
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'rescan';
+                rescanBtn.disabled = false;
+                rescanBtn.textContent = 'rescan';
             }
         }
-        
+
+        function currentPlaylistUrl() {
+            if (!currentM3U8) {
+                return '';
+            }
+            return currentM3U8;
+        }
+
         function copyM3U8() {
-            if (!currentM3U8) return;
+            const playlistUrl = currentPlaylistUrl();
+            if (!playlistUrl) {
+                return;
+            }
+            const btn = document.getElementById('copy-btn');
+            const reset = () => {
+                btn.classList.remove('copied');
+                btn.textContent = '📋 copy m3u8';
+            };
+            const markCopied = () => {
+                btn.classList.add('copied');
+                btn.textContent = '✅ copied';
+                setTimeout(reset, 2000);
+            };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(currentM3U8);
+                navigator.clipboard.writeText(playlistUrl).then(markCopied).catch((error) => {
+                    console.error('Clipboard error:', error);
+                });
             } else {
                 const ta = document.createElement('textarea');
-                ta.value = currentM3U8;
+                ta.value = playlistUrl;
                 document.body.appendChild(ta);
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
+                markCopied();
             }
         }
-        
-        // Initialize
+
+        async function parseM3U8(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                const lines = text
+                    .split('\n')
+                    .map((line) => line.trim())
+                    .filter(Boolean);
+                const tracks = [];
+                let currentTrackName = '';
+                for (const line of lines) {
+                    if (line.startsWith('#EXTINF:')) {
+                        const match = line.match(/^#EXTINF:[^,]*,(.*)$/);
+                        currentTrackName = match ? match[1] : 'Unknown';
+                    } else if (!line.startsWith('#')) {
+                        const name = currentTrackName || 'Unknown';
+                        tracks.push({ name, url: line });
+                        currentTrackName = '';
+                    }
+                }
+                return tracks;
+            } catch (error) {
+                console.error('Error parsing M3U8:', error);
+                return [];
+            }
+        }
+
+        function relativePathFromUrl(url) {
+            try {
+                const parsed = new URL(url, window.location.href);
+                const pathname = parsed.pathname || '';
+                return pathname.startsWith('/') ? pathname.slice(1) : pathname;
+            } catch (_error) {
+                return url;
+            }
+        }
+
+        function computeDisplayTracks(allTracks) {
+            const normalizedPath = currentPath.replace(/\\+/g, '/');
+            const encodedPrefix = normalizedPath
+                ? `${normalizedPath.split('/').map((segment) => encodeURIComponent(segment)).join('/')}/`
+                : '';
+            return allTracks
+                .map((track, index) => {
+                    const relPath = relativePathFromUrl(track.url);
+                    if (encodedPrefix && !relPath.startsWith(encodedPrefix)) {
+                        return null;
+                    }
+                    const tail = encodedPrefix ? relPath.slice(encodedPrefix.length) : relPath;
+                    if (!tail || tail.includes('/')) {
+                        return null;
+                    }
+                    return {
+                        name: track.name,
+                        url: track.url,
+                        playlistIndex: index,
+                    };
+                })
+                .filter(Boolean);
+        }
+
         loadFolder();
     </script>
 </body>
