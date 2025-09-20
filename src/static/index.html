@@ -27,6 +27,10 @@
         
         <div class="player-section">
             <div class="now-playing">
+                <div class="now-playing-artwork" id="now-playing-artwork">
+                    <div class="artwork-placeholder" id="artwork-placeholder" aria-hidden="true">♪</div>
+                    <img id="now-playing-artwork-img" alt="Album artwork" />
+                </div>
                 <div class="track-title" id="track-title">no track selected</div>
                 <div class="track-info" id="track-info">ready to play</div>
             </div>
@@ -36,17 +40,19 @@
             </div>
             
             <div class="player-controls">
-                <button class="control-btn" onclick="previousTrack()">⏮</button>
-                <button class="control-btn play-pause" onclick="togglePlayback()" id="play-pause-btn">▶</button>
-                <button class="control-btn" onclick="nextTrack()">⏭</button>
-                <div class="volume-control">
-                    <span class="volume-icon">🔊</span>
-                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.1" value="1">
-                </div>
-                <div class="volume-control">
-                    <span class="volume-icon">🔊</span>
-                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.1" value="1">
-                </div>
+                <button class="control-btn" onclick="previousTrack()" aria-label="Previous track">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M5 5h2v14H5V5zm3.5 7 9.5 7V5l-9.5 7z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="control-btn play-pause" onclick="togglePlayback()" id="play-pause-btn" aria-label="Play">
+                    <span class="icon" aria-hidden="true">▶</span>
+                </button>
+                <button class="control-btn" onclick="nextTrack()" aria-label="Next track">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M17 5h2v14h-2V5zm-3.5 7L4 19V5l9.5 7z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
         </div>
         

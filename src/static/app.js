@@ -1,8 +1,11 @@
 const API_BASE = '/api';
 const audio = document.getElementById('audio');
-const volumeSlider = document.getElementById('volume-slider');
 const playPauseBtn = document.getElementById('play-pause-btn');
 const progressFill = document.getElementById('progress-fill');
+const PLAY_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5v14l11-7-11-7z" fill="currentColor"/></svg>';
+const PAUSE_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>';
+const artworkContainer = document.getElementById('now-playing-artwork');
+const artworkImg = document.getElementById('now-playing-artwork-img');
 const breadcrumbEl = document.getElementById('breadcrumb');
 const playlistContentEl = document.getElementById('playlist-content');
 const playlistControlsEl = document.getElementById('playlist-controls');
@@ -17,23 +20,19 @@ let currentPlaylist = [];
 let currentDisplayTracks = [];
 let currentTrackIndex = -1;
 let currentM3U8 = '';
-let playlistFetchToken = 0;
 let tracksLoading = false;
 let tracksError = '';
 
-if (volumeSlider) {
-    volumeSlider.value = String(audio.volume || 1);
-    volumeSlider.addEventListener('input', (event) => {
-        audio.volume = parseFloat(event.target.value);
-    });
-}
-
 setupMediaSessionHandlers();
 setDocumentTitle(null);
+setPlayPauseVisual(false);
+updatePlayerInfo(null);
 loadFolder();
 
 async function loadFolder(path = '') {
     try {
+        tracksLoading = true;
+        tracksError = '';
         playlistContentEl.innerHTML = '<div class="loading">loading music library...</div>';
         const url = path ? `${API_BASE}/folder?path=${encodeURIComponent(path)}` : `${API_BASE}/folder`;
         const response = await fetch(url);
@@ -52,8 +51,18 @@ async function loadFolder(path = '') {
             updateMediaSession(null);
         }
 
+        const tracks = Array.isArray(data.tracks) ? data.tracks : [];
+        currentPlaylist = tracks.map((track, index) => ({
+            ...track,
+            displayName: track.display_name || track.name,
+            playlistIndex: index,
+        }));
+        currentDisplayTracks = computeDisplayTracks(currentPlaylist);
+        tracksLoading = false;
+        tracksError = !currentPlaylist.length && !currentAlbums.length ? 'no tracks found' : '';
+
         updatePlaylistControls();
-        await loadTracksFromM3U8(true);
+        updatePlaylistContent();
         scrollPlaylistToTop();
     } catch (error) {
         console.error('Error loading folder:', error);
@@ -70,11 +79,12 @@ async function loadFolder(path = '') {
 function updatePlaylistControls() {
     const hasParent = Boolean(currentPath);
     const playlistUrl = currentPlaylistUrl();
+    const hasTracks = currentPlaylist.length > 0;
     const disabledAttr = (enabled) => (enabled ? '' : 'disabled');
 
     playlistControlsEl.innerHTML = `
         <button class="playlist-btn" onclick="goBack()" ${disabledAttr(hasParent)}>back</button>
-        <button class="playlist-btn" onclick="playPlaylist()" ${disabledAttr(!!playlistUrl)}>play all</button>
+        <button class="playlist-btn" onclick="playPlaylist()" ${disabledAttr(hasTracks)}>play all</button>
         <button class="playlist-btn" id="copy-btn" onclick="copyM3U8()" ${disabledAttr(!!playlistUrl)}>📋 copy m3u8</button>
         <button class="playlist-btn" id="download-btn" onclick="downloadM3U8()" ${disabledAttr(!!playlistUrl)}>⬇ download m3u8</button>
     `;
@@ -112,50 +122,6 @@ function updatePlaylistContent() {
     playlistContentEl.innerHTML = html;
 }
 
-async function loadTracksFromM3U8(force = false) {
-    if (!currentM3U8) {
-        currentPlaylist = [];
-        currentDisplayTracks = [];
-        tracksLoading = false;
-        tracksError = '';
-        updatePlaylistContent();
-        return currentPlaylist;
-    }
-    if (!force && currentPlaylist.length > 0) {
-        return currentPlaylist;
-    }
-
-    const token = ++playlistFetchToken;
-    try {
-        tracksLoading = true;
-        tracksError = '';
-        updatePlaylistContent();
-
-        const tracks = await parseM3U8(currentM3U8);
-        if (token !== playlistFetchToken) {
-            return currentPlaylist;
-        }
-
-        currentPlaylist = tracks;
-        currentDisplayTracks = computeDisplayTracks(tracks);
-        tracksLoading = false;
-        tracksError = tracks.length === 0 ? 'No tracks found in playlist' : '';
-        updatePlaylistContent();
-        return currentPlaylist;
-    } catch (error) {
-        if (token !== playlistFetchToken) {
-            return currentPlaylist;
-        }
-        tracksLoading = false;
-        tracksError = 'error loading playlist';
-        currentPlaylist = [];
-        currentDisplayTracks = [];
-        console.error('Error loading playlist:', error);
-        updatePlaylistContent();
-        return currentPlaylist;
-    }
-}
-
 function playTrack(index) {
     if (!currentPlaylist.length) {
         return;
@@ -175,14 +141,13 @@ function playTrack(index) {
     updatePositionState();
 }
 
-async function playPlaylist() {
-    if (!currentM3U8) {
-        alert('Playlist URL not available');
-        return;
-    }
-    const tracks = await loadTracksFromM3U8();
-    if (!tracks.length) {
-        alert('No tracks found in playlist');
+function playPlaylist() {
+    if (!currentPlaylist.length) {
+        if (!currentM3U8) {
+            alert('Playlist URL not available');
+        } else {
+            alert('No tracks found in playlist');
+        }
         return;
     }
     playTrack(0);
@@ -255,12 +220,25 @@ function updatePlayerInfo(track) {
         infoEl.textContent = 'ready to play';
         setDocumentTitle(null);
         updateMediaSession(null);
+        setArtwork(null);
         return;
     }
-    titleEl.textContent = track.name;
-    infoEl.textContent = `${currentTrackIndex + 1} of ${currentPlaylist.length} (playlist mode)`;
+    const displayName = track.displayName || track.name;
+    titleEl.textContent = displayName;
+    const metaParts = [];
+    if (track.artist) {
+        metaParts.push(track.artist);
+    }
+    if (track.album) {
+        metaParts.push(track.album);
+    }
+    if (!metaParts.length) {
+        metaParts.push(`${currentTrackIndex + 1} of ${currentPlaylist.length}`);
+    }
+    infoEl.textContent = metaParts.join(' · ');
     setDocumentTitle(track);
     updateMediaSession(track);
+    setArtwork(track.artwork_url || null);
 }
 
 function updateTrackHighlight() {
@@ -279,18 +257,22 @@ function updateProgress() {
     progressFill.style.width = `${percentage}%`;
 }
 
-audio.addEventListener('play', () => {
-    if (playPauseBtn) {
-        playPauseBtn.textContent = '⏸';
+function setPlayPauseVisual(isPlaying) {
+    if (!playPauseBtn) {
+        return;
     }
+    playPauseBtn.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
+    playPauseBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+}
+
+audio.addEventListener('play', () => {
+    setPlayPauseVisual(true);
     updatePlaybackState('playing');
     updatePositionState();
 });
 
 audio.addEventListener('pause', () => {
-    if (playPauseBtn) {
-        playPauseBtn.textContent = '▶';
-    }
+    setPlayPauseVisual(false);
     updatePlaybackState('paused');
 });
 
@@ -397,63 +379,25 @@ async function downloadM3U8() {
     }
 }
 
-async function parseM3U8(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const text = await response.text();
-        const lines = text
-            .split('\n')
-            .map((line) => line.trim())
-            .filter(Boolean);
-        const tracks = [];
-        let currentTrackName = '';
-        for (const line of lines) {
-            if (line.startsWith('#EXTINF:')) {
-                const match = line.match(/^#EXTINF:[^,]*,(.*)$/);
-                currentTrackName = match ? match[1] : 'Unknown';
-            } else if (!line.startsWith('#')) {
-                const name = currentTrackName || 'Unknown';
-                tracks.push({ name, url: line });
-                currentTrackName = '';
-            }
-        }
-        return tracks;
-    } catch (error) {
-        console.error('Error parsing M3U8:', error);
-        return [];
-    }
-}
-
-function relativePathFromUrl(url) {
-    try {
-        const parsed = new URL(url, window.location.href);
-        const pathname = parsed.pathname || '';
-        return pathname.startsWith('/') ? pathname.slice(1) : pathname;
-    } catch (_error) {
-        return url;
-    }
-}
-
 function computeDisplayTracks(allTracks) {
     const normalizedPath = currentPath.replace(/\\+/g, '/');
-    const encodedPrefix = normalizedPath
-        ? `${normalizedPath.split('/').map((segment) => encodeURIComponent(segment)).join('/')}/`
-        : '';
+    const prefix = normalizedPath ? `${normalizedPath}/` : '';
     return allTracks
         .map((track, index) => {
-            const relPath = relativePathFromUrl(track.url);
-            if (encodedPrefix && !relPath.startsWith(encodedPrefix)) {
-                return null;
-            }
-            const tail = encodedPrefix ? relPath.slice(encodedPrefix.length) : relPath;
-            if (!tail || tail.includes('/')) {
+            const relPath = (track.relative_path || '').replace(/\\+/g, '/');
+            if (prefix) {
+                if (!relPath.startsWith(prefix)) {
+                    return null;
+                }
+                const tail = relPath.slice(prefix.length);
+                if (!tail || tail.includes('/')) {
+                    return null;
+                }
+            } else if (relPath.includes('/')) {
                 return null;
             }
             return {
-                name: track.name,
+                name: track.displayName || track.name,
                 url: track.url,
                 playlistIndex: index,
             };
@@ -495,10 +439,25 @@ function escapeJsString(value) {
 }
 
 function setDocumentTitle(track) {
-    if (track && track.name) {
-        document.title = `${track.name} · musrv`;
+    if (track && (track.displayName || track.name)) {
+        const displayName = track.displayName || track.name;
+        document.title = `${displayName} · musrv`;
     } else {
         document.title = baseDocumentTitle;
+    }
+}
+
+function setArtwork(url) {
+    if (!artworkContainer || !artworkImg) {
+        return;
+    }
+    if (url) {
+        artworkImg.src = url;
+        artworkContainer.classList.add('has-art');
+    } else {
+        artworkImg.removeAttribute('src');
+        artworkImg.src = '';
+        artworkContainer.classList.remove('has-art');
     }
 }
 
@@ -546,11 +505,21 @@ function updateMediaSession(track) {
     }
     try {
         if (track) {
-            const folder = currentFolderLabel();
+            const displayName = track.displayName || track.name;
+            const artist = track.artist || currentFolderLabel();
+            const album = track.album || currentFolderLabel();
+            const artwork = track.artwork_url
+                ? [
+                      {
+                          src: track.artwork_url,
+                      },
+                  ]
+                : [];
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.name,
-                artist: folder,
-                album: folder,
+                title: displayName,
+                artist,
+                album,
+                artwork,
             });
         } else {
             navigator.mediaSession.metadata = null;

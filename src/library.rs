@@ -1,32 +1,57 @@
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use crate::path_utils;
+
+use lofty::{Accessor, AudioFile, TaggedFileExt};
 use walkdir::{DirEntry, WalkDir};
+
+use blake3::Hasher;
+
+#[derive(Clone, Debug, Default)]
+pub struct TrackMetadata {
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub duration: Option<f64>,
+    pub artwork_id: Option<String>,
+}
 
 #[derive(Clone, Debug)]
 pub struct Track {
     pub path: PathBuf,
     #[allow(dead_code)]
     pub size: Option<u64>,
+    pub metadata: TrackMetadata,
 }
 
 #[derive(Debug)]
 pub struct Library {
     #[allow(dead_code)]
     root: PathBuf,
-    tracks: Vec<Track>,
+    tracks: Vec<Arc<Track>>,
     folders: HashMap<String, FolderEntry>,
+    artworks: HashMap<String, Artwork>,
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct FolderEntry {
     pub subfolders: BTreeSet<String>,
-    pub tracks: Vec<Track>,
+    pub tracks: Vec<usize>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Artwork {
+    pub mime: String,
+    pub data: Arc<[u8]>,
 }
 
 impl Library {
     pub fn scan(root: PathBuf) -> Self {
-        let mut tracks = Vec::new();
+        let mut tracks: Vec<Arc<Track>> = Vec::new();
+        let mut artworks: HashMap<String, Artwork> = HashMap::new();
         let iter = WalkDir::new(root.clone())
             .follow_links(false)
             .into_iter()
@@ -62,21 +87,30 @@ impl Library {
                 }
                 let rel = p.strip_prefix(&root).unwrap_or(p).to_path_buf();
                 let size = fs::metadata(p).ok().map(|m| m.len());
-                tracks.push(Track { path: rel, size });
+                let (metadata, artwork_blob) = read_metadata(p);
+                if let Some(blob) = artwork_blob {
+                    artworks.entry(blob.id.clone()).or_insert_with(|| Artwork {
+                        mime: blob.mime,
+                        data: blob.data.into(),
+                    });
+                }
+                tracks.push(Arc::new(Track {
+                    path: rel,
+                    size,
+                    metadata,
+                }));
             }
         }
 
+        tracks.sort_by(|a, b| a.path.cmp(&b.path));
+
         let mut folders: HashMap<String, FolderEntry> = HashMap::new();
         folders.entry(String::new()).or_default();
-        for t in &tracks {
+        for (idx, t) in tracks.iter().enumerate() {
             // Folder tree population
             match t.path.parent() {
                 None => {
-                    folders
-                        .entry(String::new())
-                        .or_default()
-                        .tracks
-                        .push(t.clone());
+                    folders.entry(String::new()).or_default().tracks.push(idx);
                 }
                 Some(parent) => {
                     let rel_parent = parent.to_string_lossy().to_string();
@@ -84,7 +118,7 @@ impl Library {
                         .entry(rel_parent.clone())
                         .or_default()
                         .tracks
-                        .push(t.clone());
+                        .push(idx);
 
                     // Build chain of subfolder links from root to this parent
                     let parts: Vec<String> = parent
@@ -107,12 +141,11 @@ impl Library {
             }
         }
 
-        tracks.sort_by(|a, b| a.path.cmp(&b.path));
-
         Library {
             root,
             tracks,
             folders,
+            artworks,
         }
     }
 
@@ -120,7 +153,7 @@ impl Library {
     pub fn root(&self) -> &PathBuf {
         &self.root
     }
-    pub fn tracks(&self) -> &[Track] {
+    pub fn tracks(&self) -> &[Arc<Track>] {
         &self.tracks
     }
 
@@ -128,35 +161,78 @@ impl Library {
         self.folders.get(rel)
     }
 
-    pub fn collect_tracks_recursive(&self, rel: &str) -> Vec<Track> {
-        let mut v = Vec::new();
-        self.collect_tracks_recursive_inner(rel, &mut v);
-        v
+    pub fn collect_tracks_recursive(&self, rel: &str) -> Vec<Arc<Track>> {
+        let mut ids = Vec::new();
+        self.collect_tracks_recursive_inner(rel, &mut ids);
+        ids.into_iter()
+            .map(|idx| self.tracks[idx].clone())
+            .collect()
     }
 
-    fn collect_tracks_recursive_inner(&self, rel: &str, out: &mut Vec<Track>) {
+    fn collect_tracks_recursive_inner(&self, rel: &str, out: &mut Vec<usize>) {
         if let Some(entry) = self.folders.get(rel) {
-            out.extend(entry.tracks.clone());
+            out.extend(entry.tracks.iter().copied());
             for child in &entry.subfolders {
                 self.collect_tracks_recursive_inner(child, out);
             }
         }
+    }
+
+    pub fn artwork(&self, id: &str) -> Option<Artwork> {
+        self.artworks.get(id).cloned()
     }
 }
 
 fn is_hidden_entry(e: &DirEntry) -> bool {
     e.path()
         .file_name()
-        .and_then(|n| n.to_str())
-        .map(|s| {
-            s.starts_with('.') || s.starts_with("._") || s == "Thumbs.db" || s == "desktop.ini"
-        })
+        .map(path_utils::is_hidden_component)
         .unwrap_or(false)
 }
 
 fn is_hidden_path(p: &Path) -> bool {
-    p.components().any(|c| {
-        let s = c.as_os_str().to_string_lossy();
-        s.starts_with('.') || s.starts_with("._") || s == "Thumbs.db" || s == "desktop.ini"
-    })
+    p.components()
+        .any(|c| path_utils::is_hidden_component(c.as_os_str()))
+}
+
+fn read_metadata(path: &Path) -> (TrackMetadata, Option<ArtworkBlob>) {
+    let mut metadata = TrackMetadata::default();
+    let mut artwork_blob = None;
+    if let Ok(tagged) = lofty::read_from_path(path) {
+        if let Some(tag) = tagged.primary_tag().or_else(|| tagged.first_tag()) {
+            if let Some(title) = tag.title() {
+                metadata.title = Some(title.to_string());
+            }
+            if let Some(artist) = tag.artist() {
+                metadata.artist = Some(artist.to_string());
+            }
+            if let Some(album) = tag.album() {
+                metadata.album = Some(album.to_string());
+            }
+            if let Some(picture) = tag.pictures().first() {
+                let mime = picture
+                    .mime_type()
+                    .map(|m| m.to_string())
+                    .unwrap_or_else(|| "image/jpeg".to_string());
+                let data = picture.data().to_vec();
+                let mut hasher = Hasher::new();
+                hasher.update(&data);
+                let id = hasher.finalize().to_hex().to_string();
+                metadata.artwork_id = Some(id.clone());
+                artwork_blob = Some(ArtworkBlob { id, mime, data });
+            }
+        }
+        let duration = tagged.properties().duration().as_secs_f64();
+        if duration.is_finite() && duration > 0.0 {
+            metadata.duration = Some(duration);
+        }
+    }
+    (metadata, artwork_blob)
+}
+
+#[derive(Debug)]
+struct ArtworkBlob {
+    id: String,
+    mime: String,
+    data: Vec<u8>,
 }
