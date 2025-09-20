@@ -12,10 +12,19 @@ pub fn encode_path(rel: &str) -> String {
 pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Track]) -> String {
     let mut body = String::from("#EXTM3U\r\n");
     for t in tracks {
-        let name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+        let file_name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+        let mut display = t.metadata.title.as_deref().unwrap_or(file_name).to_string();
+        if let Some(artist) = t.metadata.artist.as_deref() {
+            if !artist.is_empty() {
+                display = format!("{artist} - {display}");
+            }
+        }
+        let duration = t.metadata.duration.map(|d| d.round() as i64).unwrap_or(0);
         let rel = t.path.to_string_lossy().replace('\\', "/");
         let encoded = encode_path(&rel);
-        body.push_str(&format!("#EXTINF:0,{name}\r\n{base}{encoded}\r\n"));
+        body.push_str(&format!(
+            "#EXTINF:{duration},{display}\r\n{base}{encoded}\r\n"
+        ));
     }
     body
 }
@@ -31,10 +40,12 @@ mod tests {
             Track {
                 path: PathBuf::from("Album/song one.mp3"),
                 size: None,
+                metadata: crate::library::TrackMetadata::default(),
             },
             Track {
                 path: PathBuf::from("Root.mp3"),
                 size: Some(123),
+                metadata: crate::library::TrackMetadata::default(),
             },
         ];
         let out = render_m3u8("http://h/", Path::new("/"), &tracks);

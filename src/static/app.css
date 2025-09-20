@@ -139,52 +139,27 @@ body {
     transition: all 0.2s ease;
 }
 
+.control-btn.play-pause {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+    position: relative;
+}
+
+.control-btn.play-pause::after {
+}
+
+.control-btn.play-pause.amplitude-playing::after {
+}
+
 .control-btn:hover,
 .control-btn:focus-visible {
     background: #333333;
     color: #ffffff;
 }
 
-.control-btn.play-pause {
-    width: 46px;
-    height: 46px;
-    font-size: 16px;
-}
-
-.volume-control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: 18px;
-}
-
-.volume-icon {
-    font-size: 14px;
-    color: #aaaaaa;
-}
-
-.volume-slider {
-    width: 100px;
-    height: 3px;
-    background: #333333;
-    outline: none;
+.progress-bar.amplitude-progress-container {
     cursor: pointer;
-}
-
-.volume-slider::-webkit-slider-thumb {
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #666666;
-    cursor: pointer;
-}
-
-.volume-slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    background: #666666;
-    cursor: pointer;
-    border: none;
 }
 
 .playlist-section {
@@ -309,6 +284,12 @@ body {
     color: #ffffff;
 }
 
+.track.amplitude-active-song-container,
+.track.amplitude-playing {
+    background: #2d2d2d;
+    color: #ffffff;
+}
+
 .track-name {
     font-size: 13px;
     font-weight: 300;
@@ -392,17 +373,6 @@ body {
         width: 42px;
         height: 42px;
         font-size: 14px;
-    }
-
-    .volume-control {
-        margin-left: 0;
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-
-    .volume-slider {
-        width: 140px;
     }
 
     .playlist-content {

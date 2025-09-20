@@ -4,9 +4,11 @@ use axum::{
     Router,
     extract::{Path as AxPath, Query, State},
     http::{StatusCode, header},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::get,
 };
+
+use bytes::Bytes;
 
 use std::sync::Arc;
 use tower::util::ServiceExt;
@@ -23,6 +25,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/icon.svg", get(app_icon))
         .route("/api/folder", get(api_folder))
         .route("/api/folder.m3u8", get(api_folder_m3u8))
+        .route("/api/artwork/:id", get(api_artwork))
         .route("/admin/rescan", get(admin_rescan))
         .route("/*path", get(static_file))
         .layer(TraceLayer::new_for_http())
@@ -101,7 +104,7 @@ struct FolderQuery {
     path: Option<String>,
 }
 
-use super::types::{JsonFolderAlbum, JsonFolderResp};
+use super::types::{JsonFolderAlbum, JsonFolderResp, JsonFolderTrack};
 
 async fn api_folder(
     Query(q): Query<FolderQuery>,
@@ -128,6 +131,41 @@ async fn api_folder(
             });
         }
     }
+    let base_url = state.base.clone();
+    let base_trimmed = state.base.trim_end_matches('/').to_string();
+    let tracks = state
+        .lib
+        .load()
+        .collect_tracks_recursive(&rel)
+        .into_iter()
+        .map(|track| {
+            let rel_path = track.path.to_string_lossy().replace('\\', "/");
+            let file_name = track
+                .path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
+            let metadata = track.metadata;
+            let display_name = metadata.title.clone().unwrap_or_else(|| file_name.clone());
+            let encoded = crate::playlist::encode_path(&rel_path);
+            let artwork_url = metadata
+                .artwork_id
+                .as_ref()
+                .map(|id| format!("{}/api/artwork/{}", base_trimmed, id));
+            JsonFolderTrack {
+                name: file_name,
+                display_name,
+                relative_path: rel_path,
+                url: format!("{}{}", base_url, encoded),
+                title: metadata.title,
+                artist: metadata.artist,
+                album: metadata.album,
+                duration: metadata.duration,
+                artwork_url,
+            }
+        })
+        .collect();
     let m3u8 = format!(
         "{}/api/folder.m3u8?path={}",
         state.base.trim_end_matches('/'),
@@ -138,6 +176,7 @@ async fn api_folder(
         path: rel,
         m3u8,
         albums,
+        tracks,
     };
     Json(body)
 }
@@ -161,6 +200,29 @@ async fn api_folder_m3u8(
         ],
         body,
     )
+}
+
+async fn api_artwork(
+    AxPath(id): AxPath<String>,
+    State(state): State<AppState>,
+) -> Result<Response, (StatusCode, String)> {
+    let lib = state.lib.load();
+    let Some(art) = lib.artwork(&id) else {
+        return Err((StatusCode::NOT_FOUND, String::new()));
+    };
+
+    let data = Bytes::copy_from_slice(&art.data);
+    let mut response = Response::new(axum::body::Body::from(data));
+    let content_type = header::HeaderValue::from_str(&art.mime)
+        .unwrap_or_else(|_| header::HeaderValue::from_static("image/jpeg"));
+    response
+        .headers_mut()
+        .insert(header::CONTENT_TYPE, content_type);
+    response.headers_mut().insert(
+        header::CACHE_CONTROL,
+        header::HeaderValue::from_static("public, max-age=86400"),
+    );
+    Ok(response)
 }
 
 async fn static_file(
