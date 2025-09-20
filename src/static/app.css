@@ -85,6 +85,46 @@ body {
     margin-bottom: 16px;
 }
 
+.now-playing-artwork {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 18px;
+    border-radius: 16px;
+    background: #2a2a2a;
+    border: 1px solid #333333;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.now-playing-artwork img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.now-playing-artwork.has-art img {
+    display: block;
+}
+
+.artwork-placeholder {
+    font-size: 42px;
+    color: #444444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    letter-spacing: 4px;
+}
+
+.now-playing-artwork.has-art .artwork-placeholder {
+    display: none;
+}
+
 .track-title {
     font-size: 16px;
     color: #ffffff;

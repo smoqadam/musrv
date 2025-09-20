@@ -4,6 +4,8 @@ const playPauseBtn = document.getElementById('play-pause-btn');
 const progressFill = document.getElementById('progress-fill');
 const PLAY_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5v14l11-7-11-7z" fill="currentColor"/></svg>';
 const PAUSE_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>';
+const artworkContainer = document.getElementById('now-playing-artwork');
+const artworkImg = document.getElementById('now-playing-artwork-img');
 const breadcrumbEl = document.getElementById('breadcrumb');
 const playlistContentEl = document.getElementById('playlist-content');
 const playlistControlsEl = document.getElementById('playlist-controls');
@@ -24,6 +26,7 @@ let tracksError = '';
 setupMediaSessionHandlers();
 setDocumentTitle(null);
 setPlayPauseVisual(false);
+updatePlayerInfo(null);
 loadFolder();
 
 async function loadFolder(path = '') {
@@ -217,6 +220,7 @@ function updatePlayerInfo(track) {
         infoEl.textContent = 'ready to play';
         setDocumentTitle(null);
         updateMediaSession(null);
+        setArtwork(null);
         return;
     }
     const displayName = track.displayName || track.name;
@@ -234,6 +238,7 @@ function updatePlayerInfo(track) {
     infoEl.textContent = metaParts.join(' · ');
     setDocumentTitle(track);
     updateMediaSession(track);
+    setArtwork(track.artwork_url || null);
 }
 
 function updateTrackHighlight() {
@@ -439,6 +444,20 @@ function setDocumentTitle(track) {
         document.title = `${displayName} · musrv`;
     } else {
         document.title = baseDocumentTitle;
+    }
+}
+
+function setArtwork(url) {
+    if (!artworkContainer || !artworkImg) {
+        return;
+    }
+    if (url) {
+        artworkImg.src = url;
+        artworkContainer.classList.add('has-art');
+    } else {
+        artworkImg.removeAttribute('src');
+        artworkImg.src = '';
+        artworkContainer.classList.remove('has-art');
     }
 }
 
