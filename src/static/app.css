@@ -1,0 +1,416 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #1a1a1a;
+    color: #cccccc;
+    height: 100vh;
+    overflow: hidden;
+    font-weight: 300;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.branding {
+    margin-bottom: 16px;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: 200;
+    color: #ffffff;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+
+.tagline {
+    font-size: 12px;
+    color: #666666;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.controls-header {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.header-btn {
+    background: #2a2a2a;
+    color: #aaaaaa;
+    border: 1px solid #333333;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.header-btn:hover,
+.header-btn:focus-visible {
+    background: #333333;
+    color: #ffffff;
+}
+
+.player-section {
+    background: #222222;
+    border: 1px solid #333333;
+    padding: 20px 24px;
+    margin-bottom: 18px;
+    min-height: 140px;
+}
+
+.now-playing {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.track-title {
+    font-size: 16px;
+    color: #ffffff;
+    margin-bottom: 6px;
+    font-weight: 300;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-info {
+    font-size: 12px;
+    color: #666666;
+    margin-bottom: 16px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 3px;
+    background: #333333;
+    margin-bottom: 16px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #666666;
+    width: 0%;
+    transition: width 0.1s ease;
+}
+
+.player-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: #2a2a2a;
+    color: #aaaaaa;
+    border: 1px solid #333333;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.control-btn:hover,
+.control-btn:focus-visible {
+    background: #333333;
+    color: #ffffff;
+}
+
+.control-btn.play-pause {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 18px;
+}
+
+.volume-icon {
+    font-size: 14px;
+    color: #aaaaaa;
+}
+
+.volume-slider {
+    width: 100px;
+    height: 3px;
+    background: #333333;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #666666;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #666666;
+    cursor: pointer;
+    border: none;
+}
+
+.playlist-section {
+    flex: 1;
+    background: #222222;
+    border: 1px solid #333333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.playlist-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #333333;
+    background: #252525;
+}
+
+.breadcrumb {
+    font-size: 12px;
+    color: #666666;
+    margin-bottom: 12px;
+}
+
+.breadcrumb a {
+    color: #888888;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible {
+    color: #ffffff;
+}
+
+.playlist-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.playlist-btn {
+    background: #2a2a2a;
+    color: #aaaaaa;
+    border: 1px solid #333333;
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.playlist-btn:hover,
+.playlist-btn:focus-visible {
+    background: #333333;
+    color: #ffffff;
+}
+
+.playlist-btn.copied {
+    background: #2d5a2d;
+    color: #90ee90;
+}
+
+.playlist-content {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #333333 #222222;
+}
+
+.playlist-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.playlist-content::-webkit-scrollbar-track {
+    background: #222222;
+}
+
+.playlist-content::-webkit-scrollbar-thumb {
+    background: #333333;
+}
+
+.playlist-content::-webkit-scrollbar-thumb:hover {
+    background: #444444;
+}
+
+.folder {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.1s ease;
+}
+
+.folder:hover,
+.folder:focus-visible {
+    background: #2a2a2a;
+}
+
+.folder-name {
+    font-size: 13px;
+    color: #bbbbbb;
+    font-weight: 300;
+}
+
+.track {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.1s ease;
+}
+
+.track:hover,
+.track:focus-visible {
+    background: #2a2a2a;
+}
+
+.track.playing {
+    background: #2d2d2d;
+    color: #ffffff;
+}
+
+.track-name {
+    font-size: 13px;
+    font-weight: 300;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.track-size {
+    font-size: 11px;
+    color: #666666;
+    font-weight: 300;
+}
+
+.loading,
+.error {
+    padding: 36px;
+    text-align: center;
+    font-size: 13px;
+    color: #666666;
+}
+
+.error {
+    color: #999999;
+}
+
+#audio {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+        padding: 16px 0;
+    }
+
+    .app-container {
+        height: auto;
+        min-height: calc(100vh - 32px);
+        padding: 24px 20px 32px;
+    }
+
+    .player-section {
+        padding: 18px;
+    }
+
+    .playlist-section {
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .app-container {
+        padding: 20px 16px 28px;
+    }
+
+    .controls-header {
+        gap: 12px;
+    }
+
+    .header-btn {
+        padding: 7px 14px;
+        font-size: 11px;
+    }
+
+    .player-controls {
+        gap: 14px;
+    }
+
+    .control-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .control-btn.play-pause {
+        width: 42px;
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .volume-control {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .volume-slider {
+        width: 140px;
+    }
+
+    .playlist-content {
+        padding-bottom: 12px;
+    }
+
+    .folder,
+    .track {
+        padding: 12px 16px;
+    }
+}

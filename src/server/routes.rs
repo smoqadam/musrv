@@ -17,6 +17,10 @@ use super::{helpers, state::AppState};
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(index))
+        .route("/app.css", get(app_css))
+        .route("/app.js", get(app_js))
+        .route("/manifest.webmanifest", get(manifest))
+        .route("/icon.svg", get(app_icon))
         .route("/api/folder", get(api_folder))
         .route("/api/folder.m3u8", get(api_folder_m3u8))
         .route("/admin/rescan", get(admin_rescan))
@@ -36,12 +40,68 @@ async fn index(State(_state): State<AppState>) -> Result<impl IntoResponse, (Sta
     ))
 }
 
+async fn app_css(
+    State(_state): State<AppState>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let body = include_str!("../static/app.css");
+    Ok((
+        [
+            (header::CONTENT_TYPE, "text/css; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        body.to_string(),
+    ))
+}
+
+async fn app_js(State(_state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let body = include_str!("../static/app.js");
+    Ok((
+        [
+            (
+                header::CONTENT_TYPE,
+                "application/javascript; charset=utf-8",
+            ),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        body.to_string(),
+    ))
+}
+
+async fn manifest(
+    State(_state): State<AppState>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let body = include_str!("../static/manifest.webmanifest");
+    Ok((
+        [
+            (
+                header::CONTENT_TYPE,
+                "application/manifest+json; charset=utf-8",
+            ),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        body.to_string(),
+    ))
+}
+
+async fn app_icon(
+    State(_state): State<AppState>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let body = include_str!("../static/icon.svg");
+    Ok((
+        [
+            (header::CONTENT_TYPE, "image/svg+xml"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        body.to_string(),
+    ))
+}
+
 #[derive(serde::Deserialize)]
 struct FolderQuery {
     path: Option<String>,
 }
 
-use super::types::{JsonFolderAlbum, JsonFolderResp, JsonFolderTrack};
+use super::types::{JsonFolderAlbum, JsonFolderResp};
 
 async fn api_folder(
     Query(q): Query<FolderQuery>,
@@ -59,26 +119,12 @@ async fn api_folder(
         rel.rsplit('/').next().unwrap_or("").to_string()
     };
     let mut albums = Vec::new();
-    let mut tracks = Vec::new();
     if let Some(entry) = state.lib.load().folder(&rel) {
         for child in &entry.subfolders {
             let child_name = child.rsplit('/').next().unwrap_or("").to_string();
             albums.push(JsonFolderAlbum {
                 name: child_name,
                 path: child.clone(),
-            });
-        }
-        for t in &entry.tracks {
-            let tname = t
-                .path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("")
-                .to_string();
-            tracks.push(JsonFolderTrack {
-                name: tname,
-                path: t.path.to_string_lossy().replace('\\', "/"),
-                size: t.size,
             });
         }
     }
@@ -92,7 +138,6 @@ async fn api_folder(
         path: rel,
         m3u8,
         albums,
-        tracks,
     };
     Json(body)
 }
