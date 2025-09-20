@@ -1,3 +1,5 @@
+use crate::path_utils;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputError {
     Invalid,
@@ -18,7 +20,7 @@ pub fn parse_album_name(mut name: String) -> Result<String, InputError> {
         if seg.is_empty() || seg == "." || seg == ".." {
             return Err(InputError::Invalid);
         }
-        if seg.starts_with('.') || seg.starts_with("._") {
+        if path_utils::is_hidden_name(seg) {
             return Err(InputError::Invalid);
         }
         if seg.contains('\\') {
@@ -35,18 +37,17 @@ pub fn validate_request_path(path: &str) -> Result<String, InputError> {
     let decoded = urlencoding::decode(path)
         .map_err(|_| InputError::Invalid)?
         .into_owned();
-    if decoded.contains("..") || decoded.starts_with('/') || decoded.contains('\0') {
+    if decoded.starts_with('/') || decoded.contains('\0') {
         return Err(InputError::Invalid);
     }
     for seg in decoded.split('/') {
         if seg.is_empty() {
             continue;
         }
-        if seg.starts_with('.')
-            || seg == "Thumbs.db"
-            || seg == "desktop.ini"
-            || seg.starts_with("._")
-        {
+        if seg == "." || seg == ".." {
+            return Err(InputError::Invalid);
+        }
+        if path_utils::is_hidden_name(seg) {
             return Err(InputError::Invalid);
         }
     }

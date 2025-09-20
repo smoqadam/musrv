@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use axum::{body, body::Body, http::Request};
+use axum::{
+    body,
+    body::Body,
+    http::{Request, StatusCode},
+};
 use tower::util::ServiceExt;
 
 fn write_file(path: &std::path::Path) {
@@ -38,6 +42,7 @@ async fn library_json_and_playlists() {
     let bytes = body::to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert!(v.get("albums").is_some());
+    assert!(v.get("tracks").is_some());
 
     let res2 = app
         .clone()
@@ -50,4 +55,16 @@ async fn library_json_and_playlists() {
         .await
         .unwrap();
     assert!(res2.status().is_success());
+
+    let res3 = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/api/artwork/does-not-exist")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res3.status(), StatusCode::NOT_FOUND);
 }
