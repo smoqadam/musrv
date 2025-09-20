@@ -97,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
                 Some(provided) => normalize_base(&provided),
                 None => format!("http://{default_host}:{port}/"),
             };
-            let listen_addr = format!("http://{}:{}/", bind, port);
+            let listen_addr = format!("http://{bind}:{port}/");
             let state = server::AppState {
                 lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
                 base: base.clone(),
@@ -132,7 +132,7 @@ fn normalize_base(input: &str) -> String {
     let with_scheme = if trimmed.contains("://") {
         trimmed.to_string()
     } else {
-        format!("http://{}", trimmed)
+        format!("http://{trimmed}")
     };
     format!("{}/", with_scheme.trim_end_matches('/'))
 }

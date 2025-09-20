@@ -15,10 +15,13 @@ pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Arc<Track>]) -> String {
     for t in tracks {
         let file_name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
         let mut display = t.metadata.title.as_deref().unwrap_or(file_name).to_string();
-        if let Some(artist) = t.metadata.artist.as_deref() {
-            if !artist.is_empty() {
-                display = format!("{artist} - {display}");
-            }
+        if let Some(artist) = t
+            .metadata
+            .artist
+            .as_deref()
+            .filter(|artist| !artist.is_empty())
+        {
+            display = format!("{artist} - {display}");
         }
         let duration = t.metadata.duration.map(|d| d.round() as i64).unwrap_or(0);
         let rel = t.path.to_string_lossy().replace('\\', "/");

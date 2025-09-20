@@ -131,12 +131,12 @@ async fn api_folder(
             let artwork_url = metadata
                 .artwork_id
                 .as_ref()
-                .map(|id| format!("{}/api/artwork/{}", base_trimmed, id));
+                .map(|id| format!("{base_trimmed}/api/artwork/{id}"));
             JsonFolderTrack {
                 name: file_name,
                 display_name,
                 relative_path: rel_path,
-                url: format!("{}{}", base_url, encoded),
+                url: format!("{base_url}{encoded}"),
                 title: metadata.title.clone(),
                 artist: metadata.artist.clone(),
                 album: metadata.album.clone(),
