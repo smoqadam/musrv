@@ -56,7 +56,6 @@ Open [http://localhost:8080/](http://localhost:8080/) (or the printed LAN URL) i
 musrv is deliberately minimal. It **does not**:
 
 * Fetch metadata from the internet
-* Show album covers or artist info
 * Download, sync, or manage your files
 
 It simply turns your local music directory into a streaming server—fast, clean, and nothing more.
