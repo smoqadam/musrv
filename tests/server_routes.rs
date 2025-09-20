@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use axum::{body, body::Body, http::{Request, StatusCode}};
+use axum::{
+    body,
+    body::Body,
+    http::{Request, StatusCode},
+};
 use tower::util::ServiceExt;
 
 fn write_file(path: &std::path::Path) {

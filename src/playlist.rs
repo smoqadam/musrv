@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Arc;
 
 use crate::library::Track;
 
@@ -9,7 +10,7 @@ pub fn encode_path(rel: &str) -> String {
         .join("/")
 }
 
-pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Track]) -> String {
+pub fn render_m3u8(base: &str, _root: &Path, tracks: &[Arc<Track>]) -> String {
     let mut body = String::from("#EXTM3U\r\n");
     for t in tracks {
         let file_name = t.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
@@ -37,16 +38,16 @@ mod tests {
     #[test]
     fn m3u8_renders_crlf_and_urls() {
         let tracks = vec![
-            Track {
+            Arc::new(Track {
                 path: PathBuf::from("Album/song one.mp3"),
                 size: None,
                 metadata: crate::library::TrackMetadata::default(),
-            },
-            Track {
+            }),
+            Arc::new(Track {
                 path: PathBuf::from("Root.mp3"),
                 size: Some(123),
                 metadata: crate::library::TrackMetadata::default(),
-            },
+            }),
         ];
         let out = render_m3u8("http://h/", Path::new("/"), &tracks);
         assert!(out.starts_with("#EXTM3U\r\n"));

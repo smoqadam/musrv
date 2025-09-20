@@ -32,71 +32,52 @@ pub fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn index(State(_state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let body = include_str!("../static/index.html");
+fn static_asset(
+    content_type: &'static str,
+    body: &'static str,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
     Ok((
         [
-            (header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (header::CONTENT_TYPE, content_type),
             (header::CACHE_CONTROL, "no-cache"),
         ],
         body.to_string(),
     ))
+}
+
+async fn index(State(_state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
+    static_asset(
+        "text/html; charset=utf-8",
+        include_str!("../static/index.html"),
+    )
 }
 
 async fn app_css(
     State(_state): State<AppState>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let body = include_str!("../static/app.css");
-    Ok((
-        [
-            (header::CONTENT_TYPE, "text/css; charset=utf-8"),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        body.to_string(),
-    ))
+    static_asset("text/css; charset=utf-8", include_str!("../static/app.css"))
 }
 
 async fn app_js(State(_state): State<AppState>) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let body = include_str!("../static/app.js");
-    Ok((
-        [
-            (
-                header::CONTENT_TYPE,
-                "application/javascript; charset=utf-8",
-            ),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        body.to_string(),
-    ))
+    static_asset(
+        "application/javascript; charset=utf-8",
+        include_str!("../static/app.js"),
+    )
 }
 
 async fn manifest(
     State(_state): State<AppState>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let body = include_str!("../static/manifest.webmanifest");
-    Ok((
-        [
-            (
-                header::CONTENT_TYPE,
-                "application/manifest+json; charset=utf-8",
-            ),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        body.to_string(),
-    ))
+    static_asset(
+        "application/manifest+json; charset=utf-8",
+        include_str!("../static/manifest.webmanifest"),
+    )
 }
 
 async fn app_icon(
     State(_state): State<AppState>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let body = include_str!("../static/icon.svg");
-    Ok((
-        [
-            (header::CONTENT_TYPE, "image/svg+xml"),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        body.to_string(),
-    ))
+    static_asset("image/svg+xml", include_str!("../static/icon.svg"))
 }
 
 #[derive(serde::Deserialize)]
@@ -109,12 +90,11 @@ use super::types::{JsonFolderAlbum, JsonFolderResp, JsonFolderTrack};
 async fn api_folder(
     Query(q): Query<FolderQuery>,
     State(state): State<AppState>,
-) -> impl axum::response::IntoResponse {
-    let rel = q.path.unwrap_or_default();
-    let rel = if rel.is_empty() {
-        String::new()
-    } else {
-        helpers::validate_request_path(&rel).unwrap_or_default()
+) -> Result<Json<JsonFolderResp>, (StatusCode, String)> {
+    let rel = match q.path {
+        Some(path) if !path.is_empty() => helpers::validate_request_path(&path)
+            .map_err(|_| (StatusCode::BAD_REQUEST, String::new()))?,
+        _ => String::new(),
     };
     let name = if rel.is_empty() {
         "/".to_string()
@@ -122,7 +102,8 @@ async fn api_folder(
         rel.rsplit('/').next().unwrap_or("").to_string()
     };
     let mut albums = Vec::new();
-    if let Some(entry) = state.lib.load().folder(&rel) {
+    let lib = state.lib.load();
+    if let Some(entry) = lib.folder(&rel) {
         for child in &entry.subfolders {
             let child_name = child.rsplit('/').next().unwrap_or("").to_string();
             albums.push(JsonFolderAlbum {
@@ -133,9 +114,7 @@ async fn api_folder(
     }
     let base_url = state.base.clone();
     let base_trimmed = state.base.trim_end_matches('/').to_string();
-    let tracks = state
-        .lib
-        .load()
+    let tracks = lib
         .collect_tracks_recursive(&rel)
         .into_iter()
         .map(|track| {
@@ -146,7 +125,7 @@ async fn api_folder(
                 .and_then(|s| s.to_str())
                 .unwrap_or("")
                 .to_string();
-            let metadata = track.metadata;
+            let metadata = &track.metadata;
             let display_name = metadata.title.clone().unwrap_or_else(|| file_name.clone());
             let encoded = crate::playlist::encode_path(&rel_path);
             let artwork_url = metadata
@@ -158,9 +137,9 @@ async fn api_folder(
                 display_name,
                 relative_path: rel_path,
                 url: format!("{}{}", base_url, encoded),
-                title: metadata.title,
-                artist: metadata.artist,
-                album: metadata.album,
+                title: metadata.title.clone(),
+                artist: metadata.artist.clone(),
+                album: metadata.album.clone(),
                 duration: metadata.duration,
                 artwork_url,
             }
@@ -178,28 +157,28 @@ async fn api_folder(
         albums,
         tracks,
     };
-    Json(body)
+    Ok(Json(body))
 }
 
 async fn api_folder_m3u8(
     Query(q): Query<FolderQuery>,
     State(state): State<AppState>,
-) -> impl axum::response::IntoResponse {
-    let rel = q.path.unwrap_or_default();
-    let rel = if rel.is_empty() {
-        String::new()
-    } else {
-        helpers::validate_request_path(&rel).unwrap_or_default()
+) -> Result<impl axum::response::IntoResponse, (StatusCode, String)> {
+    let rel = match q.path {
+        Some(path) if !path.is_empty() => helpers::validate_request_path(&path)
+            .map_err(|_| (StatusCode::BAD_REQUEST, String::new()))?,
+        _ => String::new(),
     };
-    let tracks = state.lib.load().collect_tracks_recursive(&rel);
+    let lib = state.lib.load();
+    let tracks = lib.collect_tracks_recursive(&rel);
     let body = crate::playlist::render_m3u8(&state.base, &state.root, &tracks);
-    (
+    Ok((
         [
             (header::CONTENT_TYPE, "audio/x-mpegurl; charset=utf-8"),
             (header::CACHE_CONTROL, "no-cache"),
         ],
         body,
-    )
+    ))
 }
 
 async fn api_artwork(

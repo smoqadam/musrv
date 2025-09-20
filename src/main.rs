@@ -1,4 +1,5 @@
 mod library;
+mod path_utils;
 mod playlist;
 mod server;
 

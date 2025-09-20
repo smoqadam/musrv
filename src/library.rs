@@ -3,6 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::path_utils;
+
 use lofty::{Accessor, AudioFile, TaggedFileExt};
 use walkdir::{DirEntry, WalkDir};
 
@@ -29,7 +31,7 @@ pub struct Track {
 pub struct Library {
     #[allow(dead_code)]
     root: PathBuf,
-    tracks: Vec<Track>,
+    tracks: Vec<Arc<Track>>,
     folders: HashMap<String, FolderEntry>,
     artworks: HashMap<String, Artwork>,
 }
@@ -37,7 +39,7 @@ pub struct Library {
 #[derive(Clone, Debug, Default)]
 pub struct FolderEntry {
     pub subfolders: BTreeSet<String>,
-    pub tracks: Vec<Track>,
+    pub tracks: Vec<usize>,
 }
 
 #[derive(Clone, Debug)]
@@ -48,7 +50,7 @@ pub struct Artwork {
 
 impl Library {
     pub fn scan(root: PathBuf) -> Self {
-        let mut tracks = Vec::new();
+        let mut tracks: Vec<Arc<Track>> = Vec::new();
         let mut artworks: HashMap<String, Artwork> = HashMap::new();
         let iter = WalkDir::new(root.clone())
             .follow_links(false)
@@ -92,25 +94,23 @@ impl Library {
                         data: blob.data.into(),
                     });
                 }
-                tracks.push(Track {
+                tracks.push(Arc::new(Track {
                     path: rel,
                     size,
                     metadata,
-                });
+                }));
             }
         }
 
+        tracks.sort_by(|a, b| a.path.cmp(&b.path));
+
         let mut folders: HashMap<String, FolderEntry> = HashMap::new();
         folders.entry(String::new()).or_default();
-        for t in &tracks {
+        for (idx, t) in tracks.iter().enumerate() {
             // Folder tree population
             match t.path.parent() {
                 None => {
-                    folders
-                        .entry(String::new())
-                        .or_default()
-                        .tracks
-                        .push(t.clone());
+                    folders.entry(String::new()).or_default().tracks.push(idx);
                 }
                 Some(parent) => {
                     let rel_parent = parent.to_string_lossy().to_string();
@@ -118,7 +118,7 @@ impl Library {
                         .entry(rel_parent.clone())
                         .or_default()
                         .tracks
-                        .push(t.clone());
+                        .push(idx);
 
                     // Build chain of subfolder links from root to this parent
                     let parts: Vec<String> = parent
@@ -141,8 +141,6 @@ impl Library {
             }
         }
 
-        tracks.sort_by(|a, b| a.path.cmp(&b.path));
-
         Library {
             root,
             tracks,
@@ -155,7 +153,7 @@ impl Library {
     pub fn root(&self) -> &PathBuf {
         &self.root
     }
-    pub fn tracks(&self) -> &[Track] {
+    pub fn tracks(&self) -> &[Arc<Track>] {
         &self.tracks
     }
 
@@ -163,15 +161,17 @@ impl Library {
         self.folders.get(rel)
     }
 
-    pub fn collect_tracks_recursive(&self, rel: &str) -> Vec<Track> {
-        let mut v = Vec::new();
-        self.collect_tracks_recursive_inner(rel, &mut v);
-        v
+    pub fn collect_tracks_recursive(&self, rel: &str) -> Vec<Arc<Track>> {
+        let mut ids = Vec::new();
+        self.collect_tracks_recursive_inner(rel, &mut ids);
+        ids.into_iter()
+            .map(|idx| self.tracks[idx].clone())
+            .collect()
     }
 
-    fn collect_tracks_recursive_inner(&self, rel: &str, out: &mut Vec<Track>) {
+    fn collect_tracks_recursive_inner(&self, rel: &str, out: &mut Vec<usize>) {
         if let Some(entry) = self.folders.get(rel) {
-            out.extend(entry.tracks.clone());
+            out.extend(entry.tracks.iter().copied());
             for child in &entry.subfolders {
                 self.collect_tracks_recursive_inner(child, out);
             }
@@ -186,18 +186,13 @@ impl Library {
 fn is_hidden_entry(e: &DirEntry) -> bool {
     e.path()
         .file_name()
-        .and_then(|n| n.to_str())
-        .map(|s| {
-            s.starts_with('.') || s.starts_with("._") || s == "Thumbs.db" || s == "desktop.ini"
-        })
+        .map(path_utils::is_hidden_component)
         .unwrap_or(false)
 }
 
 fn is_hidden_path(p: &Path) -> bool {
-    p.components().any(|c| {
-        let s = c.as_os_str().to_string_lossy();
-        s.starts_with('.') || s.starts_with("._") || s == "Thumbs.db" || s == "desktop.ini"
-    })
+    p.components()
+        .any(|c| path_utils::is_hidden_component(c.as_os_str()))
 }
 
 fn read_metadata(path: &Path) -> (TrackMetadata, Option<ArtworkBlob>) {
