@@ -18,7 +18,7 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             build-tool: cargo
-          - target: armv7-unknown-linux-gnueabihf
+          - target: aarch64-unknown-linux-gnu
             build-tool: cross
     steps:
       - uses: actions/checkout@v4
@@ -78,9 +78,9 @@ jobs:
           - arch: amd64
             target: x86_64-unknown-linux-gnu
             platform: linux/amd64
-          - arch: armv7
-            target: armv7-unknown-linux-gnueabihf
-            platform: linux/arm/v7
+          - arch: arm64
+            target: aarch64-unknown-linux-gnu
+            platform: linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -145,7 +145,7 @@ jobs:
           # Expect files named musrv-<target>
           for f in musrv-*; do
             case "$f" in
-              musrv-x86_64-unknown-linux-gnu|musrv-armv7-unknown-linux-gnueabihf|musrv-aarch64-apple-darwin)
+              musrv-x86_64-unknown-linux-gnu|musrv-aarch64-unknown-linux-gnu|musrv-aarch64-apple-darwin)
                 tar -czf "$f.tar.gz" -C . "$f" ;;
               *) echo "Skipping unexpected file $f" ;;
             esac
@@ -160,7 +160,7 @@ jobs:
           generate_release_notes: true
           files: |
             release/musrv-x86_64-unknown-linux-gnu.tar.gz
-            release/musrv-armv7-unknown-linux-gnueabihf.tar.gz
+            release/musrv-aarch64-unknown-linux-gnu.tar.gz
             release/musrv-aarch64-apple-darwin.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
