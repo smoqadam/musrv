@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#111111">
+    <meta name="theme-color" content="#0f0f0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="musrv">
@@ -12,73 +13,300 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/app.css">
 </head>
-<body>
-    <div class="app-container">
-        <div class="header">
-            <div class="branding">
-                <div class="logo">musrv</div>
-                <div class="tagline">minimal zero-config music server</div>
-            </div>
-            <div class="controls-header">
-                <a href="https://github.com/smoqadam/musrv" target="_blank" class="header-btn">github</a>
-                <button class="header-btn" id="rescan-btn" onclick="rescanLibrary()">rescan</button>
-            </div>
-        </div>
-        
-        <div class="player-section">
-            <div class="now-playing">
-                <div class="now-playing-artwork" id="now-playing-artwork">
-                    <div class="artwork-placeholder" id="artwork-placeholder" aria-hidden="true">♪</div>
-                    <img id="now-playing-artwork-img" alt="Album artwork" />
-                </div>
-                <div class="now-playing-meta">
-                    <div class="track-title" id="track-title">no track selected</div>
-                    <div class="track-info" id="track-info">ready to play</div>
-                </div>
-            </div>
 
-            <div class="progress-bar" onclick="seekTo(event)">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            
-            <div class="player-controls">
-                <button class="control-btn" onclick="previousTrack()" aria-label="Previous track">
-                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M5 5h2v14H5V5zm3.5 7 9.5 7V5l-9.5 7z" fill="currentColor"/>
+<body>
+    <div class="app">
+        <main class="main">
+            <header class="app-header">
+                <div class="header-brand">
+                    <svg width="220" height="56" viewBox="0 0 220 56" xmlns="http://www.w3.org/2000/svg" role="img"
+                        aria-labelledby="musrvTitle musrvDesc">
+                        <!-- LOGOMARK -->
+                        <g transform="translate(8,8)">
+                            <!-- Outer circle (record) -->
+                            <circle cx="20" cy="20" r="20" stroke="currentColor" class="logo-base" stroke-width="2"
+                                fill="none" />
+
+                            <!-- Waveform pulse inside -->
+                            <path d="M10 20 h3 v-6 h3 v12 h3 v-8 h3 v4 h3 v-10 h3 v14 h3" stroke="currentColor"
+                                class="logo-accent" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                fill="none" />
+                        </g>
+
+                        <!-- WORDMARK -->
+                        <g transform="translate(56,32)" class="logo-base">
+                            <text class="wordmark" x="0" y="0" fill="currentColor">musrv</text>
+                        </g>
                     </svg>
-                </button>
-                <button class="control-btn play-pause" onclick="togglePlayback()" id="play-pause-btn" aria-label="Play">
-                    <span class="icon" aria-hidden="true">▶</span>
-                </button>
-                <button class="control-btn" onclick="nextTrack()" aria-label="Next track">
-                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M17 5h2v14h-2V5zm-3.5 7L4 19V5l9.5 7z" fill="currentColor"/>
-                    </svg>
-                </button>
-                <button class="control-btn" onclick="toggleShuffle()" id="shuffle-btn" aria-label="Shuffle off">
-                    <svg width="22px" height="22px" viewBox="0 0 0.66 0.66" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.603 0.182a0.028 0.028 0 0 0 -0.006 -0.009l-0.083 -0.083a0.028 0.028 0 1 0 -0.039 0.039L0.511 0.165h-0.091a0.138 0.138 0 0 0 -0.118 0.067l-0.101 0.168A0.083 0.083 0 0 1 0.13 0.44H0.083a0.028 0.028 0 1 0 0 0.055h0.048a0.138 0.138 0 0 0 0.118 -0.067l0.101 -0.168A0.083 0.083 0 0 1 0.42 0.22h0.091l-0.036 0.036a0.028 0.028 0 0 0 0.039 0.039l0.083 -0.083A0.028 0.028 0 0 0 0.605 0.193m-0.002 -0.011a0.028 0.028 0 0 1 0.002 0.01z" fill="currentColor"/><path d="m0.597 0.487 -0.082 0.083a0.028 0.028 0 0 1 -0.039 -0.039L0.511 0.495h-0.091a0.138 0.138 0 0 1 -0.118 -0.067l-0.101 -0.168A0.083 0.083 0 0 0 0.13 0.22H0.083a0.028 0.028 0 0 1 0 -0.055h0.048a0.138 0.138 0 0 1 0.118 0.067l0.101 0.168A0.083 0.083 0 0 0 0.42 0.44h0.091l-0.036 -0.036a0.028 0.028 0 0 1 0.039 -0.039l0.083 0.083c0.005 0.005 0.008 0.012 0.008 0.019V0.468a0.028 0.028 0 0 1 -0.008 0.019z" fill="currentColor"/></svg>
-                </button>
-            </div>
-        </div>
-        
-        <div class="playlist-section">
-            <div class="playlist-header">
-                <div class="breadcrumb" id="breadcrumb">home</div>
-                <div class="playlist-controls" id="playlist-controls">
-                    <button class="playlist-btn" id="back-btn" onclick="goBack()">back</button>
-                    <button class="playlist-btn" id="play-all-btn" onclick="playPlaylist()">play all</button>
-                    <button class="playlist-btn" id="copy-btn" onclick="copyM3U8()">📋 copy m3u8</button>
-                    <button class="playlist-btn" id="download-btn" onclick="downloadM3U8()">⬇ download m3u8</button>
+
                 </div>
-            </div>
-            
-            <div class="playlist-content" id="playlist-content">
-                <div class="loading">loading music library...</div>
-            </div>
-        </div>
+
+                <div class="header-actions">
+                    <a href="https://github.com/smoqadam/musrv" target="_blank" class="header-link"
+                        aria-label="GitHub repository">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.1-.75.08-.74.08-.74 1.22.09 1.86 1.25 1.86 1.25 1.08 1.85 2.83 1.32 3.52 1.01.11-.79.42-1.32.76-1.62-2.67-.31-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.24-3.22-.12-.31-.54-1.57.12-3.27 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.41 1.02.01 2.04.14 3 .41 2.28-1.55 3.29-1.23 3.29-1.23.66 1.7.24 2.96.12 3.27.77.84 1.24 1.91 1.24 3.22 0 4.62-2.81 5.63-5.49 5.93.43.37.82 1.1.82 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+
+                    <!-- <select id="themeSelect" class="theme-select">
+                        <option value="">Dark</option>
+                        <option value="theme-light">Light</option>
+                        <option value="theme-solarized">Solarized</option>
+                        <option value="theme-dark-slate">Dark Slate</option>
+                        <option value="theme-warm-sunset">Warm Sunset</option>
+                        <option value="theme-ocean-deep">Ocean Deep</option>
+                        <option value="theme-forest-green">Forest Green</option>
+                        <option value="theme-purple-haze">Purple Haze</option>
+                        <option value="theme-midnight-black">Midnight Black</option>
+                        <option value="theme-rose-gold">Rose Gold</option>
+                        <option value="theme-arctic-blue">Arctic Blue</option>
+                        <option value="theme-autumn-spice">Autumn Spice</option>
+                    </select> -->
+                </div>
+            </header>
+            <section class="player">
+                <div class="player-layout">
+                    <div class="artwork" id="now-playing-artwork">
+                        <div class="artwork-placeholder" id="artwork-placeholder">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                            </svg>
+                        </div>
+                        <img id="now-playing-artwork-img" alt="Album artwork" />
+                    </div>
+                    <div class="track-info">
+                        <div class="track-title" id="track-title">No track selected</div>
+                        <div class="track-meta" id="track-info">Ready to play</div>
+                    </div>
+
+                </div>
+
+                <div class="progress" onclick="seekTo(event)">
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+
+
+                <div class="controls">
+                    <button class="control-btn" onclick="previousTrack()" aria-label="Previous track">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                        </svg>
+                    </button>
+                    <button class="control-btn control-btn--primary" onclick="togglePlayback()" id="play-pause-btn"
+                        aria-label="Play">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </button>
+                    <button class="control-btn" onclick="nextTrack()" aria-label="Next track">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                        </svg>
+                    </button>
+                    <button class="control-btn" onclick="toggleShuffle()" id="shuffle-btn" aria-label="Shuffle off">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+                        </svg>
+                    </button>
+
+                    <div class="volume-control">
+                        <button id="volumeToggle" class="volume-btn" aria-label="Volume">
+                            <div id="volumeIcon"></div>
+
+                            <div id="volumeSliderWrap" class="volume-slider-wrap hidden">
+                                <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100"
+                                    value="100" step="1" />
+                                <div id="volPct"></div>
+                            </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="library">
+                <header class="library-header">
+                    <div class="breadcrumb">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                        </svg>
+                        <span id="breadcrumb">home</span>
+                    </div>
+                    <div class="library-actions">
+                        <button class="action-btn" id="back-btn" onclick="goBack()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                            </svg>
+                            Back
+                        </button>
+                        <button class="action-btn action-btn--primary" id="play-all-btn" onclick="playPlaylist()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            Play all
+                        </button>
+                        <button class="action-btn" id="rescan-btn" onclick="rescanLibrary()"
+                            aria-label="Rescan music library">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                            </svg>
+                            Rescan
+                        </button>
+                        <div class="dropdown">
+                            <button class="action-btn dropdown-btn" onclick="toggleDropdown()"
+                                aria-label="More options">
+                                M3U8
+                            </button>
+                            <div class="dropdown-menu" id="dropdown-menu">
+                                <button class="dropdown-item" id="copy-btn" onclick="copyM3U8()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                                    </svg>
+                                    Copy
+                                </button>
+                                <button class="dropdown-item" id="download-btn" onclick="downloadM3U8()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                                    </svg>
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="library-content" id="playlist-content">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading music library...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
-    
+
     <audio id="audio"></audio>
     <script src="/app.js"></script>
+
+    <script>
+        (function () {
+            (function () {
+                function isIOS() {
+                    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                }
+                if (isIOS()) {
+                    document.querySelector('.volume-control').style.display = "none";
+                    return;
+                }
+
+                const audio = document.getElementById('audio');
+                const toggleBtn = document.getElementById("volumeToggle");
+                const icon = document.getElementById("volumeIcon");
+                const sliderWrap = document.getElementById("volumeSliderWrap");
+                const slider = document.getElementById('volumeSlider');
+                const pct = document.getElementById('volPct');
+
+                // SVG paths
+                const ICONS = {
+                    mute: "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zM5 9v6h4l5 5V4L9 9H5z",
+                    low: "M7 9v6h4l5 5V4L11 9H7z",
+                    high: "M3 9v6h4l5 5V4L7 9H3zm10.5 3c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"
+                };
+
+                function updateIcon(vol) {
+                    if (vol === 0 || audio.muted) {
+                        icon.innerHTML = '<svg fill="currentcolor" width="20px" height="20px" viewBox="0 0 0.6 0.6" xmlns="http://www.w3.org/2000/svg"><path d="M0.423 0.102a0.025 0.025 0 0 0 -0.025 0.003L0.279 0.2H0.188a0.025 0.025 0 0 0 -0.025 0.025v0.15a0.025 0.025 0 0 0 0.025 0.025h0.091l0.118 0.095a0.025 0.025 0 0 0 0.015 0.006 0.023 0.023 0 0 0 0.011 -0.003 0.025 0.025 0 0 0 0.014 -0.023V0.125a0.025 0.025 0 0 0 -0.014 -0.023M0.388 0.423l-0.085 -0.068a0.025 0.025 0 0 0 -0.015 -0.006h-0.075v-0.1h0.075a0.025 0.025 0 0 0 0.015 -0.006l0.085 -0.068Z"/></svg>';
+                    } else if (vol < 50) {
+                        icon.innerHTML = '<svg fill="currentcolor" width="20px" height="20px" viewBox="0 0 0.6 0.6" xmlns="http://www.w3.org/2000/svg"><path d="M0.471 0.229a0.025 0.025 0 1 0 -0.035 0.035A0.05 0.05 0 0 1 0.45 0.3a0.05 0.05 0 0 1 -0.018 0.038 0.025 0.025 0 0 0 -0.003 0.035 0.025 0.025 0 0 0 0.035 0.003A0.1 0.1 0 0 0 0.5 0.3a0.101 0.101 0 0 0 -0.029 -0.071m-0.11 -0.127a0.025 0.025 0 0 0 -0.025 0.003L0.216 0.2H0.125a0.025 0.025 0 0 0 -0.025 0.025v0.15a0.025 0.025 0 0 0 0.025 0.025h0.091l0.118 0.095A0.025 0.025 0 0 0 0.35 0.5a0.023 0.023 0 0 0 0.011 -0.003A0.025 0.025 0 0 0 0.375 0.475V0.125a0.025 0.025 0 0 0 -0.014 -0.023M0.325 0.423l-0.085 -0.068A0.025 0.025 0 0 0 0.225 0.35H0.15v-0.1h0.075a0.025 0.025 0 0 0 0.015 -0.006L0.325 0.177Z"/></svg>';
+                    } else {
+                        icon.innerHTML = '<svg fill="currentcolor" width="20px" height="20px" viewBox="0 0 0.6 0.6" xmlns="http://www.w3.org/2000/svg"><path d="M0.311 0.102a0.025 0.025 0 0 0 -0.025 0.003L0.166 0.2H0.075a0.025 0.025 0 0 0 -0.025 0.025v0.15a0.025 0.025 0 0 0 0.025 0.025h0.091l0.118 0.095A0.025 0.025 0 0 0 0.3 0.5a0.023 0.023 0 0 0 0.011 -0.003A0.025 0.025 0 0 0 0.325 0.475V0.125a0.025 0.025 0 0 0 -0.014 -0.023M0.275 0.423l-0.085 -0.068A0.025 0.025 0 0 0 0.175 0.35H0.1v-0.1h0.075a0.025 0.025 0 0 0 0.015 -0.006L0.275 0.177Zm0.217 -0.265a0.025 0.025 0 0 0 -0.035 0.035 0.15 0.15 0 0 1 -0.01 0.221 0.025 0.025 0 0 0 0.016 0.044 0.025 0.025 0 0 0 0.016 -0.006 0.2 0.2 0 0 0 0.013 -0.295m-0.071 0.071a0.025 0.025 0 1 0 -0.035 0.035A0.05 0.05 0 0 1 0.4 0.3a0.05 0.05 0 0 1 -0.018 0.038 0.025 0.025 0 0 0 -0.003 0.035 0.025 0.025 0 0 0 0.035 0.003A0.1 0.1 0 0 0 0.45 0.3a0.101 0.101 0 0 0 -0.029 -0.071"/></svg>';
+                    }
+                }
+
+                function applyUI() {
+                    const vol = Math.round(audio.volume * 100);
+                    slider.value = audio.muted ? 0 : vol;
+                    pct.textContent = (audio.muted ? 0 : vol) + '%';
+                    slider.style.setProperty('--fill', (audio.muted ? 0 : vol) + '%');
+                    updateIcon(vol);
+                }
+
+                toggleBtn.addEventListener("click", () => {
+                    sliderWrap.classList.toggle("hidden");
+                });
+
+                slider.addEventListener("input", () => {
+                    const v = Number(slider.value);
+                    audio.volume = v / 100;
+                    audio.muted = v === 0;
+                    applyUI();
+                });
+
+                audio.addEventListener("volumechange", applyUI);
+
+                slider.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = Math.sign(e.deltaY) * -5;
+                    const next = Math.max(0, Math.min(100, Number(slider.value) + delta));
+                    slider.value = next;
+                    audio.volume = next / 100;
+                    audio.muted = next === 0;
+                    applyUI();
+                }, { passive: false });
+
+                applyUI();
+
+                const select = document.getElementById("themeSelect");
+                const root = document.body; // or .app
+
+                const allThemes = [
+                    "theme-light",
+                    "theme-solarized",
+                    "theme-dark-slate",
+                    "theme-warm-sunset",
+                    "theme-ocean-deep",
+                    "theme-forest-green",
+                    "theme-purple-haze",
+                    "theme-midnight-black",
+                    "theme-rose-gold",
+                    "theme-arctic-blue",
+                    "theme-autumn-spice"
+                ];
+
+                // Load saved theme if exists
+                const saved = localStorage.getItem("theme");
+                if (saved) {
+                    root.classList.add(saved);
+                    select.value = saved;
+                }
+
+                // select.addEventListener("change", () => {
+                //     // remove any previous theme classes
+                //     root.classList.remove(...allThemes);
+
+                //     const theme = select.value;
+                //     if (theme) {
+                //         root.classList.add(theme);
+                //         localStorage.setItem("theme", theme);
+                //     } else {
+                //         localStorage.removeItem("theme"); // default dark
+                //     }
+                // });
+            })();
+
+        })();
+    </script>
 </body>
+
 </html>

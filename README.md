@@ -51,7 +51,9 @@ Open [http://localhost:8080/](http://localhost:8080/) (or the printed LAN URL) i
 
 ## What you get
 
-<img width="300" height="1490" alt="image" src="https://github.com/user-attachments/assets/7a75a267-a7d9-43dd-bbb7-37a6eca17ba0" />
+
+<img width="800" height="1490" alt="image" src="https://github.com/user-attachments/assets/eb977186-d9e4-4750-84c0-413c527d4147" />
+<img width="200" height="1852" alt="image" src="https://github.com/user-attachments/assets/87cb6083-aa79-4b39-9f01-e25fa573e109" />
 
 
 * Lightweight web UI with folders and a simple player

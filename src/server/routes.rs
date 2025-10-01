@@ -10,7 +10,7 @@ use axum::{
 
 use bytes::Bytes;
 
-use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use tower::util::ServiceExt;
 use tower_http::{services::ServeFile, trace::TraceLayer};
 
@@ -103,6 +103,9 @@ async fn api_folder(
     };
     let mut albums = Vec::new();
     let lib = state.lib.load();
+
+    let scanning = !state.scan_ready.load(Ordering::SeqCst);
+
     if let Some(entry) = lib.folder(&rel) {
         for child in &entry.subfolders {
             let child_name = child.rsplit('/').next().unwrap_or("").to_string();
@@ -114,6 +117,7 @@ async fn api_folder(
     }
     let base_url = state.base.clone();
     let base_trimmed = state.base.trim_end_matches('/').to_string();
+
     let tracks = lib
         .collect_tracks_recursive(&rel)
         .into_iter()
@@ -156,6 +160,7 @@ async fn api_folder(
         m3u8,
         albums,
         tracks,
+        scanning,
     };
     Ok(Json(body))
 }
@@ -228,26 +233,22 @@ async fn static_file(
 }
 
 async fn admin_rescan(State(state): State<AppState>) -> impl axum::response::IntoResponse {
-    let root = state.root.clone();
-    let new_lib =
-        match tokio::task::spawn_blocking(move || crate::library::Library::scan(root)).await {
-            Ok(lib) => lib,
-            Err(_) => {
-                return (
-                    [
-                        (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
-                        (header::CACHE_CONTROL, "no-cache"),
-                    ],
-                    String::from("error"),
-                );
-            }
-        };
-    state.lib.store(Arc::new(new_lib));
-    (
-        [
-            (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        String::from("ok"),
-    )
+    let started = state.schedule_scan(false);
+    if started {
+        (
+            [
+                (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+                (header::CACHE_CONTROL, "no-cache"),
+            ],
+            String::from("scheduled"),
+        )
+    } else {
+        (
+            [
+                (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+                (header::CACHE_CONTROL, "no-cache"),
+            ],
+            String::from("busy"),
+        )
+    }
 }

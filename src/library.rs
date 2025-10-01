@@ -10,7 +10,10 @@ use walkdir::{DirEntry, WalkDir};
 
 use blake3::Hasher;
 
-#[derive(Clone, Debug, Default)]
+const CACHE_DIR: &str = ".musrv";
+const CACHE_FILE: &str = "library.json";
+
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct TrackMetadata {
     pub title: Option<String>,
     pub artist: Option<String>,
@@ -36,7 +39,7 @@ pub struct Library {
     artworks: HashMap<String, Artwork>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct FolderEntry {
     pub subfolders: BTreeSet<String>,
     pub tracks: Vec<usize>,
@@ -46,6 +49,26 @@ pub struct FolderEntry {
 pub struct Artwork {
     pub mime: String,
     pub data: Arc<[u8]>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct LibrarySnapshot {
+    tracks: Vec<TrackSnapshot>,
+    folders: HashMap<String, FolderEntry>,
+    artworks: HashMap<String, ArtworkSnapshot>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct TrackSnapshot {
+    path: PathBuf,
+    size: Option<u64>,
+    metadata: TrackMetadata,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct ArtworkSnapshot {
+    mime: String,
+    data: Vec<u8>,
 }
 
 impl Library {
@@ -149,6 +172,32 @@ impl Library {
         }
     }
 
+    pub fn empty(root: PathBuf) -> Self {
+        Library {
+            root,
+            tracks: Vec::new(),
+            folders: HashMap::new(),
+            artworks: HashMap::new(),
+        }
+    }
+
+    pub fn load_cached(root: &Path) -> anyhow::Result<Self> {
+        let path = cache_path(root);
+        let data = fs::read(path)?;
+        let snapshot: LibrarySnapshot = serde_json::from_slice(&data)?;
+        Ok(Library::from_snapshot(root.to_path_buf(), snapshot))
+    }
+
+    pub fn save_cached(&self) -> anyhow::Result<()> {
+        let snapshot = self.to_snapshot();
+        let data = serde_json::to_vec(&snapshot)?;
+        let dir = cache_dir(&self.root);
+        fs::create_dir_all(&dir)?;
+        let path = dir.join(CACHE_FILE);
+        fs::write(path, data)?;
+        Ok(())
+    }
+
     #[allow(dead_code)]
     pub fn root(&self) -> &PathBuf {
         &self.root
@@ -181,6 +230,77 @@ impl Library {
     pub fn artwork(&self, id: &str) -> Option<Artwork> {
         self.artworks.get(id).cloned()
     }
+
+    fn from_snapshot(root: PathBuf, snapshot: LibrarySnapshot) -> Self {
+        let tracks = snapshot
+            .tracks
+            .into_iter()
+            .map(|track| {
+                Arc::new(Track {
+                    path: track.path,
+                    size: track.size,
+                    metadata: track.metadata,
+                })
+            })
+            .collect();
+        let artworks = snapshot
+            .artworks
+            .into_iter()
+            .map(|(id, art)| {
+                (
+                    id,
+                    Artwork {
+                        mime: art.mime,
+                        data: art.data.into(),
+                    },
+                )
+            })
+            .collect();
+        Library {
+            root,
+            tracks,
+            folders: snapshot.folders,
+            artworks,
+        }
+    }
+
+    fn to_snapshot(&self) -> LibrarySnapshot {
+        let tracks = self
+            .tracks
+            .iter()
+            .map(|track| TrackSnapshot {
+                path: track.path.clone(),
+                size: track.size,
+                metadata: track.metadata.clone(),
+            })
+            .collect();
+        let artworks = self
+            .artworks
+            .iter()
+            .map(|(id, art)| {
+                (
+                    id.clone(),
+                    ArtworkSnapshot {
+                        mime: art.mime.clone(),
+                        data: art.data.to_vec(),
+                    },
+                )
+            })
+            .collect();
+        LibrarySnapshot {
+            tracks,
+            folders: self.folders.clone(),
+            artworks,
+        }
+    }
+}
+
+fn cache_dir(root: &Path) -> PathBuf {
+    root.join(CACHE_DIR)
+}
+
+fn cache_path(root: &Path) -> PathBuf {
+    cache_dir(root).join(CACHE_FILE)
 }
 
 fn is_hidden_entry(e: &DirEntry) -> bool {

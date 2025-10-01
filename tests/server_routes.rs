@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, atomic::AtomicBool};
 
 use axum::{
     body,
@@ -25,6 +25,8 @@ async fn library_json_and_playlists() {
         lib: Arc::new(arc_swap::ArcSwap::from(Arc::new(lib))),
         base: "http://127.0.0.1:9999/".to_string(),
         root: root.clone(),
+        scan_ready: Arc::new(AtomicBool::new(true)),
+        scan_in_progress: Arc::new(AtomicBool::new(false)),
     };
     let app = musrv::server::build_router(state);
 
@@ -43,6 +45,7 @@ async fn library_json_and_playlists() {
     let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert!(v.get("albums").is_some());
     assert!(v.get("tracks").is_some());
+    assert_eq!(v.get("scanning"), Some(&serde_json::Value::Bool(false)));
 
     let res2 = app
         .clone()

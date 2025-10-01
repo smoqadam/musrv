@@ -26,4 +26,5 @@ pub struct JsonFolderResp {
     pub m3u8: String,
     pub albums: Vec<JsonFolderAlbum>,
     pub tracks: Vec<JsonFolderTrack>,
+    pub scanning: bool,
 }

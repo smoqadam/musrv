@@ -6,7 +6,7 @@ mod server;
 use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, atomic::AtomicBool};
 
 use axum::Router;
 use clap::{ArgAction, Parser, Subcommand};
@@ -81,7 +81,14 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::bail!("path is not a directory: {}", path.display());
             }
             let root = std::fs::canonicalize(&path).unwrap_or(path);
-            let lib = Arc::new(library::Library::scan(root.clone()));
+            let (initial_library, cached_ready) = match library::Library::load_cached(&root) {
+                Ok(lib) => (lib, true),
+                Err(err) => {
+                    tracing::warn!(?err, "failed to load cached library");
+                    (library::Library::empty(root.clone()), false)
+                }
+            };
+            let lib = Arc::new(initial_library);
             let bind = bind.unwrap_or_else(|| "127.0.0.1".parse().unwrap());
             let port = port.unwrap_or(8080);
             let default_host = if bind.is_unspecified() {
@@ -102,8 +109,11 @@ async fn main() -> anyhow::Result<()> {
                 lib: Arc::new(arc_swap::ArcSwap::from(lib.clone())),
                 base: base.clone(),
                 root: root.clone(),
+                scan_ready: Arc::new(AtomicBool::new(cached_ready)),
+                scan_in_progress: Arc::new(AtomicBool::new(false)),
             };
-            let app: Router = server::build_router(state);
+            state.schedule_scan(!cached_ready);
+            let app: Router = server::build_router(state.clone());
             let addr = SocketAddr::new(bind, port);
             println!("root: {}", root.display());
             println!("listen: {}", listen_addr.trim_end_matches('/'));
