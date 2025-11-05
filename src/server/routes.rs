@@ -191,9 +191,16 @@ async fn api_artwork(
     State(state): State<AppState>,
 ) -> Result<Response, (StatusCode, String)> {
     let lib = state.lib.load();
-    let Some(art) = lib.artwork(&id) else {
-        return Err((StatusCode::NOT_FOUND, String::new()));
-    };
+
+    let track = lib
+        .tracks()
+        .iter()
+        .find(|t| t.metadata.artwork_id.as_ref() == Some(&id))
+        .ok_or((StatusCode::NOT_FOUND, String::new()))?;
+
+    let art = lib
+        .extract_artwork(&track.path)
+        .ok_or((StatusCode::NOT_FOUND, String::new()))?;
 
     let data = Bytes::copy_from_slice(&art.data);
     let mut response = Response::new(axum::body::Body::from(data));

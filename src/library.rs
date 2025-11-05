@@ -32,11 +32,9 @@ pub struct Track {
 
 #[derive(Debug)]
 pub struct Library {
-    #[allow(dead_code)]
     root: PathBuf,
     tracks: Vec<Arc<Track>>,
     folders: HashMap<String, FolderEntry>,
-    artworks: HashMap<String, Artwork>,
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
@@ -55,7 +53,6 @@ pub struct Artwork {
 struct LibrarySnapshot {
     tracks: Vec<TrackSnapshot>,
     folders: HashMap<String, FolderEntry>,
-    artworks: HashMap<String, ArtworkSnapshot>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -65,64 +62,62 @@ struct TrackSnapshot {
     metadata: TrackMetadata,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
-struct ArtworkSnapshot {
-    mime: String,
-    data: Vec<u8>,
-}
 
 impl Library {
     pub fn scan(root: PathBuf) -> Self {
         let mut tracks: Vec<Arc<Track>> = Vec::new();
-        let mut artworks: HashMap<String, Artwork> = HashMap::new();
         let iter = WalkDir::new(root.clone())
             .follow_links(false)
             .into_iter()
             .filter_entry(|e| !is_hidden_entry(e));
         for entry in iter.filter_map(|e| e.ok()) {
             let p = entry.path();
-            if p.is_file()
-                && let Some(ext) = p
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .map(|s| s.to_ascii_lowercase())
-                && matches!(
-                    ext.as_str(),
-                    "mp3"
-                        | "flac"
-                        | "wav"
-                        | "aac"
-                        | "m4a"
-                        | "ogg"
-                        | "opus"
-                        | "wma"
-                        | "aif"
-                        | "aiff"
-                        | "alac"
-                        | "pcm"
-                        | "mp2"
-                        | "mpga"
-                        | "ape"
-                )
-            {
-                if is_hidden_path(p) {
-                    continue;
-                }
-                let rel = p.strip_prefix(&root).unwrap_or(p).to_path_buf();
-                let size = fs::metadata(p).ok().map(|m| m.len());
-                let (metadata, artwork_blob) = read_metadata(p);
-                if let Some(blob) = artwork_blob {
-                    artworks.entry(blob.id.clone()).or_insert_with(|| Artwork {
-                        mime: blob.mime,
-                        data: blob.data.into(),
-                    });
-                }
-                tracks.push(Arc::new(Track {
-                    path: rel,
-                    size,
-                    metadata,
-                }));
+            if !p.is_file() {
+                continue;
             }
+
+            let ext = match p
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|s| s.to_ascii_lowercase())
+            {
+                Some(e) => e,
+                None => continue,
+            };
+
+            if !matches!(
+                ext.as_str(),
+                "mp3"
+                    | "flac"
+                    | "wav"
+                    | "aac"
+                    | "m4a"
+                    | "ogg"
+                    | "opus"
+                    | "wma"
+                    | "aif"
+                    | "aiff"
+                    | "alac"
+                    | "pcm"
+                    | "mp2"
+                    | "mpga"
+                    | "ape"
+            ) {
+                continue;
+            }
+
+            if is_hidden_path(p) {
+                continue;
+            }
+
+            let rel = p.strip_prefix(&root).unwrap_or(p).to_path_buf();
+            let size = fs::metadata(p).ok().map(|m| m.len());
+            let metadata = read_metadata(p);
+            tracks.push(Arc::new(Track {
+                path: rel,
+                size,
+                metadata,
+            }));
         }
 
         tracks.sort_by(|a, b| a.path.cmp(&b.path));
@@ -168,7 +163,6 @@ impl Library {
             root,
             tracks,
             folders,
-            artworks,
         }
     }
 
@@ -177,7 +171,6 @@ impl Library {
             root,
             tracks: Vec::new(),
             folders: HashMap::new(),
-            artworks: HashMap::new(),
         }
     }
 
@@ -227,8 +220,10 @@ impl Library {
         }
     }
 
-    pub fn artwork(&self, id: &str) -> Option<Artwork> {
-        self.artworks.get(id).cloned()
+    /// Extract artwork from a track file on-demand
+    pub fn extract_artwork(&self, track_path: &Path) -> Option<Artwork> {
+        let full_path = self.root.join(track_path);
+        extract_artwork_from_file(&full_path)
     }
 
     fn from_snapshot(root: PathBuf, snapshot: LibrarySnapshot) -> Self {
@@ -243,24 +238,10 @@ impl Library {
                 })
             })
             .collect();
-        let artworks = snapshot
-            .artworks
-            .into_iter()
-            .map(|(id, art)| {
-                (
-                    id,
-                    Artwork {
-                        mime: art.mime,
-                        data: art.data.into(),
-                    },
-                )
-            })
-            .collect();
         Library {
             root,
             tracks,
             folders: snapshot.folders,
-            artworks,
         }
     }
 
@@ -274,23 +255,9 @@ impl Library {
                 metadata: track.metadata.clone(),
             })
             .collect();
-        let artworks = self
-            .artworks
-            .iter()
-            .map(|(id, art)| {
-                (
-                    id.clone(),
-                    ArtworkSnapshot {
-                        mime: art.mime.clone(),
-                        data: art.data.to_vec(),
-                    },
-                )
-            })
-            .collect();
         LibrarySnapshot {
             tracks,
             folders: self.folders.clone(),
-            artworks,
         }
     }
 }
@@ -315,9 +282,8 @@ fn is_hidden_path(p: &Path) -> bool {
         .any(|c| path_utils::is_hidden_component(c.as_os_str()))
 }
 
-fn read_metadata(path: &Path) -> (TrackMetadata, Option<ArtworkBlob>) {
+fn read_metadata(path: &Path) -> TrackMetadata {
     let mut metadata = TrackMetadata::default();
-    let mut artwork_blob = None;
     if let Ok(tagged) = lofty::read_from_path(path) {
         if let Some(tag) = tagged.primary_tag().or_else(|| tagged.first_tag()) {
             if let Some(title) = tag.title() {
@@ -330,16 +296,11 @@ fn read_metadata(path: &Path) -> (TrackMetadata, Option<ArtworkBlob>) {
                 metadata.album = Some(album.to_string());
             }
             if let Some(picture) = tag.pictures().first() {
-                let mime = picture
-                    .mime_type()
-                    .map(|m| m.to_string())
-                    .unwrap_or_else(|| "image/jpeg".to_string());
-                let data = picture.data().to_vec();
+                let data = picture.data();
                 let mut hasher = Hasher::new();
-                hasher.update(&data);
+                hasher.update(data);
                 let id = hasher.finalize().to_hex().to_string();
-                metadata.artwork_id = Some(id.clone());
-                artwork_blob = Some(ArtworkBlob { id, mime, data });
+                metadata.artwork_id = Some(id);
             }
         }
         let duration = tagged.properties().duration().as_secs_f64();
@@ -347,12 +308,23 @@ fn read_metadata(path: &Path) -> (TrackMetadata, Option<ArtworkBlob>) {
             metadata.duration = Some(duration);
         }
     }
-    (metadata, artwork_blob)
+    metadata
 }
 
-#[derive(Debug)]
-struct ArtworkBlob {
-    id: String,
-    mime: String,
-    data: Vec<u8>,
+/// extract artwork from a file on-demand
+fn extract_artwork_from_file(path: &Path) -> Option<Artwork> {
+    let tagged = lofty::read_from_path(path).ok()?;
+    let tag = tagged.primary_tag().or_else(|| tagged.first_tag())?;
+    let picture = tag.pictures().first()?;
+
+    let mime = picture
+        .mime_type()
+        .map(|m| m.to_string())
+        .unwrap_or_else(|| "image/jpeg".to_string());
+    let data = picture.data().to_vec();
+
+    Some(Artwork {
+        mime,
+        data: data.into(),
+    })
 }
