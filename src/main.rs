@@ -6,11 +6,11 @@ mod server;
 use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::{atomic::AtomicBool, Arc};
 
 use axum::Router;
 use clap::{ArgAction, Parser, Subcommand};
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{fmt, EnvFilter};
 
 #[derive(Parser)]
 #[command(

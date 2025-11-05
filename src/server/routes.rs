@@ -1,11 +1,11 @@
-use axum::Json;
 use axum::http::Request;
+use axum::Json;
 use axum::{
-    Router,
     extract::{Path as AxPath, Query, State},
-    http::{StatusCode, header},
+    http::{header, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
+    Router,
 };
 
 use bytes::Bytes;

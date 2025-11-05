@@ -62,7 +62,6 @@ struct TrackSnapshot {
     metadata: TrackMetadata,
 }
 
-
 impl Library {
     pub fn scan(root: PathBuf) -> Self {
         let mut tracks: Vec<Arc<Track>> = Vec::new();
